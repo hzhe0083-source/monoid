@@ -830,7 +830,7 @@ pub async fn SessionAccounts::run_on(
       )
       if !quiet {
         self.moved(key, row)
-        let prev = match current {
+        let prev = match candidates.iter().find_first(p => p.id == row.profile) {
           Some(c) => Some(c)
           None => profile_in(cfg, row.profile)
         }
