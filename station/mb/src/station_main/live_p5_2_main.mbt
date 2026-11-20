@@ -1253,8 +1253,20 @@ async fn P52::hub_op(self : P52, op : String, arg : Json) -> Json {
               let profile = jtext(next, "name").unwrap_or(jtext(next, "id").unwrap_or(""))
               let cloud = (self.bus.cloud_state.val)()
               let station_name = match cloud {
-                Some(Object(c)) => jtext(Json::object(c), "name").unwrap_or("still.fail")
-                _ => "still.fail"
+                Some(c) => {
+                  let mut joined_name : String? = None
+                  for j in jitems(jfield(c, "joined")) {
+                    if jtext(j, "workspace") == Some(ws) {
+                      joined_name = jtext(j, "name")
+                      break
+                    }
+                  }
+                  match joined_name {
+                    Some(n) => n
+                    None => jtext(c, "name").unwrap_or("still.fail")
+                  }
+                }
+                None => "still.fail"
               }
               (self.bus.events_send_live.val)(
                 "billed-fallback",
