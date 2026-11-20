@@ -2286,7 +2286,7 @@ test("notifications_are_on_until_turned_off_and_kept_so_with_no_pushes", async (
   apply(host, values);
   // (the workspaces the accounts are in apart: as the fixture's are)
   const settings = (x: J) => Object.fromEntries(Object.entries(x).filter(([k]) => k !== "workspaces"));
-  assert.deepEqual(settings(v(values, 1)), { on: true, asked: false, push: true, kinds: { wait: true, failed: true, done: "away", message: true }, preview: true, muted: [], permission: "unknown", show: [] });
+  assert.deepEqual(settings(v(values, 1)), { on: true, asked: false, push: true, kinds: { wait: true, failed: true, done: "away", message: true, billed: false }, preview: true, muted: [], permission: "unknown", show: [] });
   // What the system allows, as the app finds it: shown to every UI, not kept.
   call(core, ui, 4, "notify.permission", { state: "denied" });
   call(core, ui, 5, "notify.set", { preview: false });
@@ -2299,7 +2299,7 @@ test("notifications_are_on_until_turned_off_and_kept_so_with_no_pushes", async (
   call(core, ui, 3, "push.register", { kind: "fcm", token: "t" });
   await host.settle();
   apply(host, values);
-  assert.deepEqual(settings(v(values, 1)), { on: false, asked: true, push: false, kinds: { wait: true, failed: true, done: "away", message: true }, preview: false, muted: [], permission: "denied", show: [] });
+  assert.deepEqual(settings(v(values, 1)), { on: false, asked: true, push: false, kinds: { wait: true, failed: true, done: "away", message: true, billed: false }, preview: false, muted: [], permission: "denied", show: [] });
   assert.equal(host.stored(PUSH_KEY), undefined);
   // Kept across a restart.
   core.close();
@@ -2328,7 +2328,7 @@ test("a_push_registration_says_what_this_device_shows_and_is_given_again_as_that
   const ui = core.connect();
   call(core, ui, 1, "push.register", { kind: "fcm", token: "t" });
   await host.settle();
-  assert.deepEqual(posted.map((p) => [p.token, p.preview, p.kinds]), [["t", true, { wait: true, failed: true, done: "away", message: true }]]);
+  assert.deepEqual(posted.map((p) => [p.token, p.preview, p.kinds]), [["t", true, { wait: true, failed: true, done: "away", message: true, billed: false }]]);
   // Its preview off, people's messages off: given again saying so (the cloud makes its pushes so), not waited on.
   call(core, ui, 2, "notify.set", { preview: false, kinds: { message: false } });
   await host.settle();

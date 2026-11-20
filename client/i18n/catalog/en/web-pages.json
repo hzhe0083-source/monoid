@@ -609,7 +609,7 @@
   "web-pages.errors.inviteCodeUsed": "Invite code already used",
   "web-pages.errors.tooManyMembers": "Member limit reached: only you on the free plan, up to 6 people on Standard",
   "web-pages.errors.tooManyWorkspaces": "An account can create up to 5 workspaces",
-  "web-pages.notifications.kinds.billed": "Switched to pay-as-you-go",
+  "web-pages.notifications.kinds.billed": "Pay-as-you-go",
   "web-pages.notifications.kinds.billedNote": "Notify workspace admins when subscriptions run out and sessions fall back to pay-as-you-go",
   "web-pages.notifications.kinds.done": "A turn is done",
   "web-pages.notifications.kinds.doneAlways": "Always",

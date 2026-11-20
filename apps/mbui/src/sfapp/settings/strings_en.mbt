@@ -1387,7 +1387,7 @@ let en : Map[String, String] = {
   "web-pages.notifications.hidden.wait": "Waiting for you",
   "web-pages.notifications.inBadge": "Count in the badge",
   "web-pages.notifications.inBell": "Light the bell",
-  "web-pages.notifications.kinds.billed": "Switched to pay-as-you-go",
+  "web-pages.notifications.kinds.billed": "Pay-as-you-go",
   "web-pages.notifications.kinds.billedNote": "Notify workspace admins when subscriptions run out and sessions fall back to pay-as-you-go",
   "web-pages.notifications.kinds.done": "A turn is done",
   "web-pages.notifications.kinds.doneAlways": "Always",
