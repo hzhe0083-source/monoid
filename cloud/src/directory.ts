@@ -409,8 +409,8 @@ export class Directory extends DurableObject<Env> {
     this.#stations.dropPush(devices);
   }
 
-  pushTargets(station: string, emails: string[], wanted: string | null = null): { workspace: string; devices: Record<string, PushRegistration[]> } | null {
-    return this.#stations.pushTargets(station, emails, wanted);
+  pushTargets(station: string, emails: string[], wanted: string | null = null, includeManagers = false): { workspace: string; devices: Record<string, PushRegistration[]>; managers?: PushRegistration[] } | null {
+    return this.#stations.pushTargets(station, emails, wanted, includeManagers);
   }
 
   // ── relays ──────────────────────────────────────────────────────────────

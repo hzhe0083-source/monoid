@@ -64,6 +64,7 @@ pub(all) struct LiveBus {
   /// catalog's part (P5-3), given to the readers as it changes (read/pool.ts `give`).
   model_catalog : Ref[() -> Json]
   events_tell : Ref[(String, Json, String, Json) -> Unit]
+  events_send_live : Ref[(String, Json, Json) -> Unit]
   overview_changed : Ref[() -> Unit]
   host_sample : Ref[async () -> Json]
   // ── PeerBus & MeshSide (transport attached by P5-1; handlers registered by any slice) ──
@@ -233,6 +234,7 @@ pub fn LiveBus::new(
     reader_ask: Ref(async fn(_op, _q, _lang) { Json::null() }),
     model_catalog: Ref(() => { "version": Json::number(0.0), "models": Json::object({}) }),
     events_tell: Ref(fn(_ev, _data, _key, _to) { () }),
+    events_send_live: Ref(fn(_ev, _data, _to) { () }),
     overview_changed: Ref(() => ()),
     host_sample: Ref(async fn() { machine() }),
     peer_handlers,

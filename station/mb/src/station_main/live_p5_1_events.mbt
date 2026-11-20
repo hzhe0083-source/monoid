@@ -337,6 +337,7 @@ fn P51::events_live(self : P51) -> EventsLive {
   // The store's changes, told.
   self.stops.push(bus.subscribe_store(change => events.store_changed(to_jv(change))))
   bus.events_tell.val = (event, data, key, to) => events.tell(event, to_jv(data), key, to_jv(to))
+  bus.events_send_live.val = (event, data, to) => events.send_live(event, to_jv(data), to_jv(to))
   bus.overview_changed.val = () => events.overview_changed()
   // config.json changed: the overview and every chat row told again; cloud.json changed: the overview (agents.ts
   // `config.listen(() => (events.overviewChanged(), events.rowsChanged(null)))`, `cloud.listen(() => events.overviewChanged())`).

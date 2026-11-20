@@ -26,7 +26,7 @@ import { runChanged, runShown } from "./run-change.ts";
 import { unlockWorktrees, withLock } from "./archive.ts";
 import { roomOfSoon } from "./footprint.ts";
 import { type Profile, type Runtime, runs, runtimeNamed, runtimeTitle } from "./config.ts";
-import { FAST_RUNTIMES } from "../agents/profiles.ts";
+import { billedPerUse, FAST_RUNTIMES } from "../agents/profiles.ts";
 import { CLIENT_KEY_KEPT_MS, type Hub, connectOf, newChatKey, newSingleSessionKey, newToken } from "./hub.ts";
 import { INTERNAL_CHANNEL, INTERNAL_CONNECT, chatKey, chatWorkspace } from "./internal.ts";
 import { STATION_AUTHOR } from "../store/rows.ts";
@@ -213,6 +213,7 @@ async function sessionMade(hub: Hub, key: string, client: string | null, options
     return hub.accounts.pick(eligible, model, true);
   };
   let profile;
+  let candidatePool: Profile[] = profiles;
   if (wantedProfiles !== null) {
     const subset = [];
     for (const id of wantedProfiles) {
@@ -224,6 +225,7 @@ async function sessionMade(hub: Hub, key: string, client: string | null, options
       if (model !== null && !runs(found, model)) throw new Error(tr(lang, "station.profile.modelOff", { profile: found.name, model }));
       subset.push(found);
     }
+    candidatePool = subset;
     profile = subset.length === 1 ? subset[0]! : pickAccount(subset);
   } else profile = pickAccount(profiles);
   const effort = options.effort ? options.effort : null;
@@ -271,6 +273,9 @@ async function sessionMade(hub: Hub, key: string, client: string | null, options
     ws: options.ws ?? null,
   });
   log.info("hub", "session created", { session: key, connect: INTERNAL_CONNECT, runtime, profile: profile.id, model, preset });
+  if (wantedProfiles?.length !== 1 && billedPerUse(profile) && candidatePool.some((p) => !billedPerUse(p))) {
+    hub.noteBilledFallback({ session: key, workspace: options.ws ?? null, runtime, profile });
+  }
   return [key, openChat(hub, key, options.createdBy, title)];
 }
 

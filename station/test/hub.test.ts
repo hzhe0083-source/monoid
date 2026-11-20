@@ -4250,3 +4250,46 @@ test("a session whose directory is gone is not continued", async () => {
   assert.equal(r.store.listSessions().length, 0);
   await r.close();
 });
+
+test("onBilledFallback fires only on automatic fallback to pay-as-you-go when subscriptions exist", async () => {
+  const { newSession } = await import("../src/sessions/lifecycle.ts");
+  const r = new Rig();
+  const fallbacks: { session: string; runtime: string; profile: string }[] = [];
+  r.hub.onBilledFallback = (info) => fallbacks.push({ session: info.session, runtime: info.runtime, profile: info.profile.id });
+  const base = r.config.profiles.find((p) => p.runtimes.includes("claude"))!;
+  const sub = { ...base, id: "sub", name: "Claude Sub", access: { kind: "subscription" as const }, env: {} };
+  const payg = { ...base, id: "payg", name: "OpenRouter", access: { kind: "api-provider" as const, provider: "openrouter" }, env: {} };
+
+  // 1. Pure pay-as-you-go pool (no subscriptions) -> never fires.
+  r.config = { ...r.config, profiles: [payg] };
+  await newSession(r.hub, { runtime: "claude", createdBy: "ada@x.com" });
+  assert.deepEqual(fallbacks, []);
+
+  // 2. Mixed pool where subscription is exhausted -> new session auto-picks payg -> fires.
+  r.config = { ...r.config, profiles: [sub, payg] };
+  r.hub.accounts.setHealth((id) => (id === "sub" ? { quota: { state: "ok", windows: [{ usedPercent: 100, resetsAt: r.hub.now() + 3_600_000 }] } } : {}));
+  const [s1] = await newSession(r.hub, { runtime: "claude", createdBy: "ada@x.com" });
+  assert.equal(fallbacks.length, 1);
+  assert.deepEqual(fallbacks[0], { session: s1, runtime: "claude", profile: "payg" });
+
+  // 3. Pinned to payg -> never fires.
+  await newSession(r.hub, { runtime: "claude", profile: "payg", createdBy: "ada@x.com" });
+  assert.equal(fallbacks.length, 1);
+
+  // 4. Session on sub runs out of allowance (spend) -> falls back to payg -> fires.
+  r.hub.accounts.setHealth(() => ({}));
+  const [s2] = await newSession(r.hub, { runtime: "claude", createdBy: "ada@x.com" });
+  assert.equal(r.store.getSession(s2)?.profile, "sub");
+  assert.equal(fallbacks.length, 1);
+  r.hub.accounts.spend(s2, "sub");
+  assert.equal(r.store.getSession(s2)?.profile, "payg");
+  assert.equal(fallbacks.length, 2);
+  assert.deepEqual(fallbacks[1], { session: s2, runtime: "claude", profile: "payg" });
+
+  // 5. Upgrading back from payg to sub -> does NOT fire.
+  r.hub.accounts.resetAllowance("sub");
+  r.hub.accounts.runOn(s2);
+  assert.equal(r.store.getSession(s2)?.profile, "sub");
+  assert.equal(fallbacks.length, 2);
+  await r.close();
+});

@@ -20,9 +20,10 @@ const KEY = "notify";
 const SHOW_FOR_MS = 30_000;
 
 /// Which notices are shown: a card or an agent needing them (wait, block), something gone
-/// wrong, a turn done (never, only while no page of the app is in front, or always), someone else saying something.
-export type Kinds = { wait: boolean; failed: boolean; done: "off" | "away" | "always"; message: boolean };
-export const ALL_KINDS: Kinds = { wait: true, failed: true, done: "away", message: true };
+/// wrong, a turn done (never, only while no page of the app is in front, or always), someone else saying something,
+/// or a session falling back to a pay-as-you-go account (billed, off by default).
+export type Kinds = { wait: boolean; failed: boolean; done: "off" | "away" | "always"; message: boolean; billed: boolean };
+export const ALL_KINDS: Kinds = { wait: true, failed: true, done: "away", message: true, billed: false };
 
 /// `preview`: a notice says what was said; off, only what kind of thing happened (as a phone's 「显示预览」). `muted`:
 /// the workspaces not heard of (each one is unless turned off, those joined later too).
@@ -38,13 +39,13 @@ function mutedOf(base: string[], changes: J): string[] {
 /// Kinds as given (or kept): what is not given stays as `base` has it.
 export function kindsOf(v: J, base: Kinds = ALL_KINDS): Kinds {
   const k = v !== null && typeof v === "object" ? v : {};
-  const flag = (name: "wait" | "failed" | "message") => (typeof k[name] === "boolean" ? k[name] : base[name]);
-  return { wait: flag("wait"), failed: flag("failed"), done: ["off", "away", "always"].includes(k.done) ? k.done : base.done, message: flag("message") };
+  const flag = (name: "wait" | "failed" | "message" | "billed") => (typeof k[name] === "boolean" ? k[name] : base[name]);
+  return { wait: flag("wait"), failed: flag("failed"), done: ["off", "away", "always"].includes(k.done) ? k.done : base.done, message: flag("message"), billed: flag("billed") };
 }
 
 /// A notice's body with `preview` off: what kind of thing happened, not what was said.
 function hidden(kind: unknown): string {
-  return t(kind === "wait" || kind === "block" ? "core-misc.notice.hidden.wait" : kind === "failed" ? "core-misc.notice.hidden.failed" : kind === "message" ? "core-misc.notice.hidden.message" : "core-misc.notice.hidden.done");
+  return t(kind === "wait" || kind === "block" ? "core-misc.notice.hidden.wait" : kind === "failed" ? "core-misc.notice.hidden.failed" : kind === "message" ? "core-misc.notice.hidden.message" : kind === "billed" ? "core-misc.notice.hidden.billed" : "core-misc.notice.hidden.done");
 }
 
 function is(c: ChatOf, station: string, thread: number | null, session: string | null): boolean {
@@ -216,6 +217,7 @@ export class Attend {
     if (kind === "wait" || kind === "block") return k.wait;
     if (kind === "failed") return k.failed;
     if (kind === "message") return k.message;
+    if (kind === "billed") return k.billed;
     return k.done === "always" || (k.done === "away" && !inFront);
   }
 

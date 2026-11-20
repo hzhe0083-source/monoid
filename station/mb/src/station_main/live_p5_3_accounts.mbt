@@ -211,6 +211,7 @@ fn P53Accounts::attach(self : P53Accounts) -> Unit {
       async fn() { made.hub_config() },
       () => wall_ms().to_double(),
       rt,
+      tells_billed_fallback=true,
     )
     self.sessions = Some(sa)
     made.set_hub_accounts(sa)

@@ -304,5 +304,6 @@ export const PREF_SHAPES: Record<string, Shape> = {
     ["failed", "bool", { default: true }],
     ["done", "String", { default: true, doc: "off | away (only while no page of the app is in front) | always" }],
     ["message", "bool", { default: true, doc: "Someone else said something." }],
-  ], { doc: "Which notices this device shows (`notify.set` `kinds`); what is not given is on (`done`: away)." }),
+    ["billed", "bool", { default: true, doc: "A session automatically fell back to a pay-as-you-go profile (default off)." }],
+  ], { doc: "Which notices this device shows (`notify.set` `kinds`); what is not given is on (`done`: away, `billed`: off)." }),
 };

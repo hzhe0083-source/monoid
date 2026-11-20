@@ -13,12 +13,12 @@
 ///|
 /// The kinds of thing that happen that are told of (Notifications.tsx KINDS_SHOWN), in the order shown.
 // kept across runs: a table, never written
-let notify_kinds : Array[String] = ["wait", "failed", "done", "message"]
+let notify_kinds : Array[String] = ["wait", "failed", "done", "message", "billed"]
 
 ///|
 /// The services and jobs left up long: told of only by the rail's bell (`badgeKinds.services`), after the kinds.
 // kept across runs: a table, never written
-let notify_kinds_shown : Array[String] = ["wait", "failed", "done", "message", "services"]
+let notify_kinds_shown : Array[String] = ["wait", "failed", "done", "message", "services", "billed"]
 
 ///|
 /// As at the start (settings_reset): no kind opened, nothing chosen.
@@ -388,7 +388,12 @@ fn notify_preview_node(
   let title = fn() {
     match latest() {
       Some(n) => text(Some(n), "title")
-      None => @sf.t("web-pages.notifications.sample.title")
+      None =>
+        if kind() == "billed" {
+          @sf.t("web-pages.notifications.sample.billedTitle")
+        } else {
+          @sf.t("web-pages.notifications.sample.title")
+        }
     }
   }
   let body = fn() {
@@ -449,6 +454,7 @@ fn app_icon_name() -> String {
 /// done turn's banner: off, while away, always; the services left up long: the bell's alone), as they change.
 fn kind_row_node(k : @view.View, core : Core, notify : () -> Json?, on : () -> Bool, kind : String) -> Unit {
   let bell = kind == "services"
+  let banner_only = kind == "billed"
   let badge = fn(kind) { badge_kind(core, kind) }
   let sum = fn() {
     let ways : Array[String] = []
@@ -464,7 +470,7 @@ fn kind_row_node(k : @view.View, core : Core, notify : () -> Json?, on : () -> B
         },
       )
     }
-    if !bell && @ui.badge_shown() && badge("on") && badge(kind) {
+    if !bell && !banner_only && @ui.badge_shown() && badge("on") && badge(kind) {
       ways.push(@sf.t("web-pages.notifications.ways.badge"))
     }
     if ways.length() == 0 {
@@ -517,7 +523,7 @@ fn kind_row_node(k : @view.View, core : Core, notify : () -> Json?, on : () -> B
         }, fn(v) { set_kind(core, kind, Json::boolean(v)) })
       }
       // 计入红点: whether the app's icon counts it (off while the badge is), where the system shows the app's number
-      if !bell && @ui.badge_shown() {
+      if !bell && !banner_only && @ui.badge_shown() {
         way_switch_node(w, fn() { @sf.t("web-pages.notifications.inBadge") }, fn() { badge(kind) }, fn() { !badge("on") }, fn(
           v,
         ) {

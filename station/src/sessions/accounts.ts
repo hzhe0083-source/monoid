@@ -45,6 +45,8 @@ export type AccountsDeps = {
   allows?(key: string, profile: Profile): boolean;
   /// Session `key`, left to the station, was moved to another profile by it (`runOn`, `spend`): `was` how it ran before.
   moved?(key: string, was: SessionRow): void;
+  /// Session `key` automatically fell back from a subscription profile to a billed-per-use profile.
+  billedFallback?(info: { session: string; workspace: string | null; runtime: RuntimeKind; profile: Profile }): void;
 };
 
 export class Accounts {
@@ -367,7 +369,13 @@ export class Accounts {
       store.setSessionProfile(key, next.id, false, keptProfiles);
       if (next.id !== row.profile) {
         log.info("hub", "session taken on by another profile", { session: key, from: row.profile, to: next.id });
-        if (!quiet) this.deps.moved?.(key, row);
+        if (!quiet) {
+          this.deps.moved?.(key, row);
+          const prev = current ?? this.deps.config().profiles.find((p) => p.id === row.profile);
+          if (billedPerUse(next) && (!prev || !billedPerUse(prev)) && candidates.some((p) => !billedPerUse(p))) {
+            this.deps.billedFallback?.({ session: key, workspace: row.ws ?? null, runtime, profile: next });
+          }
+        }
       }
     }
     return withSpelling(next);
@@ -456,6 +464,10 @@ export class Accounts {
     store.setSessionProfile(key, next.id, false, keptProfiles);
     log.info("hub", "allowance ran out; session taken on by another profile", { session: key, from: left, to: next.id });
     this.deps.moved?.(key, row);
+    const prev = config.profiles.find((p) => p.id === left);
+    if (billedPerUse(next) && (!prev || !billedPerUse(prev)) && all.some((p) => !billedPerUse(p))) {
+      this.deps.billedFallback?.({ session: key, workspace: row.ws ?? null, runtime, profile: next });
+    }
     return [name(left), next.name];
   }
 
@@ -483,7 +495,13 @@ export class Accounts {
     store.setSessionRuntime(key, target, next.id, false, model, effort, fast, context, null);
     store.setSessionContextBefore(key, null);
     log.info("hub", said, { session: key, from: left ?? row.profile, to: next.id, runtime: target });
-    if (!quiet) this.deps.moved?.(key, row);
+    if (!quiet) {
+      this.deps.moved?.(key, row);
+      const prev = config.profiles.find((p) => p.id === (left ?? row.profile));
+      if (billedPerUse(next) && prev !== undefined && !billedPerUse(prev)) {
+        this.deps.billedFallback?.({ session: key, workspace: row.ws ?? null, runtime, profile: next });
+      }
+    }
     return next;
   }
 

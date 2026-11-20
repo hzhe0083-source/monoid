@@ -89,6 +89,7 @@ export async function registration(request: Request, env: Env, sub: string, sid:
 
 interface Notice {
   to: string[];
+  audience?: "managers";
   kind: string;
   session: string;
   title: string;
@@ -104,12 +105,14 @@ function notice(value: unknown): Notice | null {
   if (!value || typeof value !== "object") return null;
   const n = value as Record<string, unknown>;
   const to = Array.isArray(n.to) ? n.to.filter((e): e is string => typeof e === "string" && e.includes("@") && e.length <= 320).slice(0, MAX_TO) : [];
-  if (!to.length || typeof n.kind !== "string" || !/^[a-z_]{1,32}$/.test(n.kind)) return null;
-  if (typeof n.session !== "string" || !n.session || n.session.length > 512) return null;
+  const audience = n.audience === "managers" ? "managers" : undefined;
+  if ((!to.length && audience !== "managers") || typeof n.kind !== "string" || !/^[a-z_]{1,32}$/.test(n.kind)) return null;
+  const allowEmptySession = audience === "managers" && n.kind === "billed";
+  if (typeof n.session !== "string" || (!allowEmptySession && !n.session) || n.session.length > 512) return null;
   if (typeof n.text !== "string" || (n.title !== undefined && typeof n.title !== "string") || (n.by !== undefined && n.by !== null && typeof n.by !== "string")) return null;
   const at = typeof n.at === "number" && Number.isFinite(n.at) ? Math.floor(n.at) : clock.now();
   const seq = typeof n.seq === "number" && Number.isSafeInteger(n.seq) && n.seq >= 0 ? n.seq : undefined;
-  return { to, kind: n.kind, session: n.session, title: (n.title as string | undefined) ?? "", by: (n.by as string | null | undefined) || undefined, text: n.text, at, seq };
+  return { to, ...(audience ? { audience } : {}), kind: n.kind, session: n.session, title: (n.title as string | undefined) ?? "", by: (n.by as string | null | undefined) || undefined, text: n.text, at, seq };
 }
 
 /** POST /v1/stations/notify `{ notices, workspace? }`: a station's notices, pushed to the members they name → `{ sent }`. */
@@ -138,7 +141,8 @@ export async function stationNotify(request: Request, env: Env): Promise<Respons
     return reply({ error: "invalid_request" }, 400);
   }
   const dir = env.DIRECTORY.getByName("primary");
-  const targets = await dir.pushTargets(station, notices.flatMap((n) => n.to), workspace);
+  const includeManagers = notices.some((n) => n.audience === "managers");
+  const targets = await dir.pushTargets(station, notices.flatMap((n) => n.to), workspace, includeManagers);
   // Enrolled (stationSender says so), but not in the workspace it named.
   if (!targets) return workspace ? reply({ error: "not_in_workspace" }, 403) : reply({ error: "invalid_signature" }, 401);
   const keys = vapid(env);
@@ -156,22 +160,40 @@ export async function stationNotify(request: Request, env: Env): Promise<Respons
   for (const n of notices) {
     const base = `${targets.workspace}/${station}`;
     // In each device's language, saying what was said only where it shows that.
-    const payload = (lang: Lang, shows: Shows | null): Record<string, string> => ({
-      type: "notice",
-      kind: n.kind,
-      title: line(n.title),
-      body: noticeBodyFor(shows, n.kind, n.text, n.by, lang),
-      tag: `${base}/${n.session}`,
-      url: `/o/${base}/${encodeURIComponent(n.session)}${n.seq === undefined ? "" : `?message=${n.seq}`}`,
-      workspace: targets.workspace,
-      station,
-      session: n.session,
-      at: String(n.at),
-      ...(n.seq === undefined ? {} : { seq: String(n.seq) }),
-    });
+    const payload = (lang: Lang, shows: Shows | null): Record<string, string> =>
+      n.kind === "billed"
+        ? {
+            type: "notice",
+            kind: n.kind,
+            title: line(n.title),
+            body: noticeBodyFor(shows, n.kind, n.text, n.by, lang),
+            tag: `${base}/${n.session || "billed"}`,
+            url: `/w/${targets.workspace}/s/${station}/profiles`,
+            workspace: targets.workspace,
+            station,
+            at: String(n.at),
+          }
+        : {
+            type: "notice",
+            kind: n.kind,
+            title: line(n.title),
+            body: noticeBodyFor(shows, n.kind, n.text, n.by, lang),
+            tag: `${base}/${n.session}`,
+            url: `/o/${base}/${encodeURIComponent(n.session)}${n.seq === undefined ? "" : `?message=${n.seq}`}`,
+            workspace: targets.workspace,
+            station,
+            session: n.session,
+            at: String(n.at),
+            ...(n.seq === undefined ? {} : { seq: String(n.seq) }),
+          };
     // A device signed in with several of the people named gets it once.
     const devices = new Map<string, PushRegistration>();
-    for (const email of n.to) for (const device of targets.devices[email.toLowerCase()] ?? []) devices.set(device.kind === "web" ? `web ${device.endpoint}` : `${device.kind} ${device.token}`, device);
+    const addDevice = (device: PushRegistration) => devices.set(device.kind === "web" ? `web ${device.endpoint}` : `${device.kind} ${device.token}`, device);
+    if (n.audience === "managers") {
+      for (const device of targets.managers ?? []) addDevice(device);
+    } else {
+      for (const email of n.to) for (const device of targets.devices[email.toLowerCase()] ?? []) addDevice(device);
+    }
     for (const device of devices.values()) {
       if (pushes.length >= MAX_PUSHES) break;
       // (a kind it does not show, or of a workspace it turned off, is not sent)

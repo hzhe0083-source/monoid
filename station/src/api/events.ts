@@ -43,7 +43,7 @@
 import { type FSWatcher, watch } from "node:fs";
 import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import { type Viewer, readOnly } from "../mesh/credential.ts";
+import { type Viewer, managesStation, readOnly } from "../mesh/credential.ts";
 import type { Lang } from "../ops/i18n.ts";
 import { log } from "../ops/log.ts";
 import type { Readers } from "../read/pool.ts";
@@ -136,11 +136,12 @@ export type To = {
   /// That viewer's in that language (`viewerKey`): their sidebar, their overview, a thread as they have it.
   viewer?: string;
   /// Whose viewer has that email (in any case), is in that workspace, is one of those people (`sub`), may only read or
-  /// not (`readOnly`).
+  /// not (`readOnly`), or manages the station (`managers`: workspace owner or admin).
   email?: string;
   workspace?: string;
   subs?: string[];
   readOnly?: boolean;
+  managers?: boolean;
   /// Whose viewer is a member of that vault of their workspace (`inVault`) as it is told: one who left it is not told
   /// of it again.
   vault?: string;
@@ -158,6 +159,7 @@ export const isFor = (to: To, { viewer, lang }: { viewer: Viewer; lang: Lang }, 
   (to.workspace === undefined || to.workspace === viewer.workspace) &&
   (to.subs === undefined || to.subs.includes(viewer.sub)) &&
   (to.readOnly === undefined || to.readOnly === readOnly(viewer)) &&
+  (to.managers === undefined || to.managers === managesStation(viewer)) &&
   (to.vault === undefined || whose.inVault?.(viewer, to.vault) === true) &&
   (to.sees === undefined || ("ws" in to.sees ? sees(viewer, to.sees.ws) : (whose.seen?.(viewer, to.sees) ?? true)));
 
@@ -377,6 +379,12 @@ export class Events {
   /// latest under `of` kept for one coming back.
   tell(event: string, data: unknown, of: string, to: To) {
     this.emit(event, data, to, of);
+  }
+
+  /// Sends an ephemeral event to currently connected matching streams without appending to the resume log.
+  sendLive(event: string, data: unknown, to: To = {}) {
+    if (this.handed) return;
+    for (const c of this.clients) if (this.reaches(c, to)) c.send(event, data);
   }
 
   /// A login changed: told to everyone as `machine-logins`, a read-only member given `limited`

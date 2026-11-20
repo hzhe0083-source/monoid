@@ -26,6 +26,7 @@ import { homedir } from "node:os";
 import { Clock, Effect, Fiber } from "effect";
 import { liveClock, wall, within } from "../ops/fibers.ts";
 import { RUNTIME_KINDS, type AgentDriver, type AgentSession, type RuntimeKind } from "../agents/runtime.ts";
+import { billedPerUse } from "../agents/profiles.ts";
 import { endRunner, runnerId } from "../agents/process.ts";
 import { RUNNER_LEFT_MS, allLeft, isTerminalRunner, liveRunners, type RunnerInfo } from "../agents/runner.ts";
 import { log } from "../ops/log.ts";
@@ -114,6 +115,8 @@ const NOTHING_COLD: ColdStorage = { isCold: async () => false, restore: () => {}
 /// What the hub hands to the next station: each actor's snapshot (handover.json).
 export type Handover = { sessions: Snapshot[] };
 
+export type BilledFallback = { session: string; workspace: string | null; runtime: RuntimeKind; profile: Profile };
+
 export type HubOptions = {
   /// Read on every use, so edits apply to the next decision.
   config: () => HubConfig;
@@ -159,6 +162,8 @@ export type HubOptions = {
   siteInstructions?: string;
   /// Whether moving to another station is on here (features.ts stationMoveOn); on where none is said.
   moveOn?: () => boolean;
+  /// Called when a session automatically falls back to a pay-as-you-go profile while subscriptions exist.
+  onBilledFallback?: (info: BilledFallback) => void;
 };
 
 /// The handover file, in the data directory.
@@ -306,10 +311,12 @@ export class Hub {
   private closedHook: ((key: string) => void) | null = null;
   private peersHook: ((station: string, request: Json) => Promise<Json>) | null = null;
   private outsideHook: ((ws: string | null) => OutsideChat[]) | null = null;
+  onBilledFallback: ((info: BilledFallback) => void) | null = null;
   readonly deps: SessionDeps;
 
   constructor(options: HubOptions) {
     this.options = options;
+    this.onBilledFallback = options.onBilledFallback ?? null;
     this.clock = options.clock ?? liveClock;
     this.store = options.store;
     this.internal = options.internal ?? null;
@@ -338,6 +345,7 @@ export class Hub {
         };
         void this.actor(now).runChanged({ was: runShown(was, named), now: runShown(now, named) }).catch(() => {});
       },
+      billedFallback: (info) => this.noteBilledFallback(info),
     });
     this.live = new LiveHub(
       async (key) => {
@@ -1719,6 +1727,15 @@ export class Hub {
       ws: connect.workspace ?? null,
     });
     log.info("hub", "session created", { session: key, connect: connect.id, scope, runtime, model: model ?? "", profile: profile.id });
+    const pool = boundFits.length > 0 ? boundFits : fits;
+    if (boundFits.length !== 1 && billedPerUse(profile) && pool.some((p) => !billedPerUse(p))) {
+      this.noteBilledFallback({ session: key, workspace: connect.workspace ?? null, runtime, profile });
+    }
+  }
+
+  /// Reports an automatic fallback to a billed-per-use profile unless the session was handed over.
+  noteBilledFallback(info: BilledFallback): void {
+    if (!this.handedOver(info.session)) this.onBilledFallback?.(info);
   }
 
   /// The program its actors run in, the station's jobs too (jobs/jobs.ts), started for its first use (none: not built

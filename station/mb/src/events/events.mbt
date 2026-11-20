@@ -525,6 +525,24 @@ pub fn Events::tell(
 }
 
 ///|
+/// Sends an ephemeral event to currently connected matching streams without appending to the resume log.
+pub fn Events::send_live(
+  self : Events,
+  event : String,
+  data : J,
+  to : J,
+) -> Unit {
+  if self.handed {
+    return
+  }
+  for c in self.clients {
+    if self.reaches(c, to) {
+      c.send(event, data)
+    }
+  }
+}
+
+///|
 pub fn Events::machine_logins(
   self : Events,
   data : J,

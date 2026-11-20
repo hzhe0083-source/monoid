@@ -548,3 +548,55 @@ test("Android devices get a high-priority FCM data message; an unregistered toke
     await h.close();
   }
 });
+
+test("billed-fallback notices default off, reach only workspace managers who opted in, and open profiles without session", async () => {
+  // Unit checks for noticeText billed kind.
+  assert.equal(shown(null, "billed"), false, "older registrations with shows=null never get billed notices");
+  assert.equal(shown(showsOf({ kinds: {}, preview: true }), "billed"), false, "billed defaults off when omitted");
+  assert.equal(shown(showsOf({ kinds: { billed: true }, preview: true }), "billed"), true);
+  assert.equal(noticeBody("billed", "OpenRouter", "Claude Code", "zh"), "Claude Code 订阅已用完，已切到按量付费（OpenRouter）");
+  assert.equal(noticeBody("billed", "OpenRouter", "Claude Code", "en"), "Claude Code subscriptions ran out; fell back to pay-as-you-go (OpenRouter)");
+  assert.equal(noticeBodyFor(showsOf({ kinds: { billed: true }, preview: false }), "billed", "OpenRouter", "Claude Code", "zh"), "已切到按量付费");
+  assert.equal(noticeBodyFor(showsOf({ kinds: { billed: true }, preview: false }), "billed", "OpenRouter", "Claude Code", "en"), "Pay-as-you-go fallback");
+
+  const vapid = await vapidKeys();
+  const services = pushServices();
+  const h = await harness({ vapid, push: services.answer });
+  try {
+    const { id, station, aliceTokens, bobTokens } = await workspace(h);
+    const aliceUa = await browser();
+    const bobUa = await browser();
+    const aliceEp = "https://push.example/alice-manager";
+    const bobEp = "https://push.example/bob-member";
+    // Both opt into billed, but only Alice is a manager (owner); Bob is a regular member.
+    assert.equal((await register(h, aliceTokens, "POST", { kind: "web", endpoint: aliceEp, keys: { p256dh: aliceUa.p256dh, auth: aliceUa.auth }, kinds: { billed: false }, preview: true })).status, 204);
+    assert.equal((await register(h, bobTokens, "POST", { kind: "web", endpoint: bobEp, keys: { p256dh: bobUa.p256dh, auth: bobUa.auth }, kinds: { billed: true }, preview: true })).status, 204);
+
+    const billedNotice = { to: [], audience: "managers", kind: "billed", session: "billed:claude", thread: 0, title: "willow", by: "Claude Code", text: "OpenRouter", at: 1790000000000 };
+    // With Alice's billed off, nobody gets it (Bob is not a manager).
+    assert.deepEqual(await (await notify(h, station, [billedNotice])).json(), { sent: 0 });
+    assert.equal(services.to(bobEp).length, 0);
+
+    // Alice opts in to billed.
+    assert.equal((await register(h, aliceTokens, "POST", { kind: "web", endpoint: aliceEp, keys: { p256dh: aliceUa.p256dh, auth: aliceUa.auth }, kinds: { billed: true }, preview: true, lang: "zh" })).status, 204);
+    assert.deepEqual(await (await notify(h, station, [billedNotice])).json(), { sent: 1 });
+    assert.equal(services.to(bobEp).length, 0);
+    const [push] = services.to(aliceEp);
+    assert.ok(push);
+    const payload = JSON.parse(await decrypt(push.body, aliceUa));
+    assert.deepEqual(payload, {
+      type: "notice",
+      kind: "billed",
+      title: "willow",
+      body: "Claude Code 订阅已用完，已切到按量付费（OpenRouter）",
+      tag: `${id}/${station.id}/billed:claude`,
+      url: `/w/${id}/s/${station.id}/profiles`,
+      workspace: id,
+      station: station.id,
+      at: "1790000000000",
+    });
+    assert.equal("session" in payload, false, "billed push omits session so Android skips notice.bring");
+  } finally {
+    await h.close();
+  }
+});

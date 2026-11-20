@@ -309,6 +309,31 @@ fn open_target_now(src : Source, t : LinkTarget, outside : Bool, at : Double?, n
       }
       open_page(Setting(route))
     }
+    // a station's Profiles page (/w/<ws>/s/<station>/profiles), e.g. from a pay-as-you-go fallback notice
+    "profiles" => {
+      if t.station == "" {
+        return false
+      }
+      let route : @settings.Route = Profiles(address)
+      if app.nav.top() == Setting(route) {
+        if outside {
+          bring_chosen()
+        }
+        return true
+      }
+      let away = ws != current
+      if away {
+        pick_workspace(src, ws)
+      }
+      (shell.val.close_overlays)()
+      if outside || away {
+        (shell.val.home)()
+        if app.nav.top() != Home {
+          app.nav.replace(Home)
+        }
+      }
+      open_page(Setting(route))
+    }
     // a station's web service on a page of its own (its "open on its own", /w/…/s/…/services/<job>): the service over
     // whatever page is open, its workspace's Home under it when it is another workspace's or from outside
     "service" => {

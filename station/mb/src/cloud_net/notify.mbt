@@ -11,6 +11,10 @@ pub let gather_ms : Int = 1_000
 pub let max_batch : Int = 50
 
 ///|
+/// Minimum interval between pay-as-you-go fallback alerts for the same workspace and runtime (4 hours).
+pub let billed_notify_cooldown_ms : Int64 = 14_400_000L
+
+///|
 /// Who wrote a message the station said itself (rows.ts `STATION_AUTHOR`).
 pub let station_author : String = "station"
 
@@ -74,6 +78,8 @@ pub struct Notifier {
   priv since : Int64
   /// Each session's last turn noticed (when it ended), so one turn is noticed once.
   priv ended : Map[String, Int64]
+  /// Last time a billed-per-use fallback alert was accepted, by `<workspace>\0<runtime>`.
+  priv billed_notified : Map[String, Int64]
   priv waiting : Array[Json]
   priv mut gathering : Bool
   priv mut stop : () -> Unit
@@ -87,6 +93,7 @@ pub fn Notifier::new(parts : NotifyParts, now : Int64) -> Notifier {
     parts,
     since: now,
     ended: Map([]),
+    billed_notified: Map([]),
     waiting: [],
     gathering: false,
     stop: fn() {  },
@@ -154,6 +161,47 @@ fn Notifier::ask(self : Notifier, op : String, args : Json) -> Unit {
 }
 
 ///|
+/// Enqueues a manager-only push notice when sessions automatically fall back to a pay-as-you-go profile.
+/// Returns true when accepted (member of workspace and outside the 4-hour cooldown).
+pub fn Notifier::notify_billed_fallback(
+  self : Notifier,
+  workspace : String?,
+  runtime : String,
+  runtime_title : String,
+  profile : String,
+  title : String,
+  at : Int64,
+) -> Bool {
+  let ws = match workspace {
+    Some(w) => Some(w)
+    None => (self.parts.home)()
+  }
+  guard ws is Some(ws) && (self.parts.member_of)(ws) else { return false }
+  let k = "\{ws}\u{0}\{runtime}"
+  match self.billed_notified.get(k) {
+    Some(prev) if at - prev < billed_notify_cooldown_ms => return false
+    _ => ()
+  }
+  self.billed_notified[k] = at
+  self.queue([
+    {
+      "to": Json::array([]),
+      "audience": Json::string("managers"),
+      "kind": Json::string("billed"),
+      "session": Json::string("billed:\{runtime}"),
+      "thread": Json::number(0.0),
+      "seq": Json::null(),
+      "title": Json::string(title),
+      "by": Json::string(runtime_title),
+      "text": Json::string(profile),
+      "at": int_json(at),
+      "ws": Json::string(ws),
+    },
+  ])
+  true
+}
+
+///|
 /// Notices to go out with the next batch (tests and what the readers made).
 pub fn Notifier::queue(self : Notifier, notices : Array[Json]) -> Unit {
   if notices.length() == 0 {
@@ -191,9 +239,13 @@ fn Notifier::gathered(self : Notifier) -> Unit {
   let by : Map[String, Array[Json]] = Map([])
   for notice in batch {
     let session = text_of(field(notice, "session")).unwrap_or("")
-    let ws = match (self.parts.session_ws)(session) {
+    let ws = match text_of(field(notice, "ws")) {
       Some(w) => Some(w)
-      None => home
+      None =>
+        match (self.parts.session_ws)(session) {
+          Some(w) => Some(w)
+          None => home
+        }
     }
     guard ws is Some(ws) && (self.parts.member_of)(ws) else { continue }
     let of = if Some(ws) == home { None } else { Some(ws) }
@@ -202,7 +254,15 @@ fn Notifier::gathered(self : Notifier) -> Unit {
       order.push(of)
       by[key] = []
     }
-    by[key].push(notice)
+    let wire = match notice {
+      Object(m) if m.contains("ws") => {
+        let copy = m.copy()
+        copy.remove("ws")
+        Json::object(copy)
+      }
+      other => other
+    }
+    by[key].push(wire)
   }
   for of in order {
     let notices = by[of.unwrap_or("\u{0}home")]

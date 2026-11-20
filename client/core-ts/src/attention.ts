@@ -8,6 +8,8 @@ import type { Inner } from "./core.ts";
 import { handlers } from "./core/execute.ts";
 import type { Call } from "./core/calls.ts";
 import type { Owner } from "./core/routing.ts";
+import { t } from "./i18n.ts";
+import { localId } from "./ids.ts";
 import { Notices, type Changed } from "./notices.ts";
 import * as prefs from "./prefs.ts";
 import type { Topic } from "./protocol.ts";
@@ -138,6 +140,36 @@ export class Attention implements Owner {
       store.inView(shown);
       if (shown) core.views.checkMoments();
     };
+    core.stations.also.push({
+      read: () => Effect.void,
+      event: (station, name, data) => {
+        if (name !== "billed-fallback" || !isObject(data)) return;
+        const at = station.indexOf("/");
+        const [workspace, stationId] = at >= 0 ? [station.slice(0, at), station.slice(at + 1)] : ["", station];
+        if (workspace === "" || stationId === "") return;
+        const runtime = typeof data.runtime === "string" ? data.runtime : "";
+        const runtimeTitle = typeof data.runtimeTitle === "string" && data.runtimeTitle !== "" ? data.runtimeTitle : runtime;
+        const profile = typeof data.profile === "string" ? data.profile : "";
+        const stationName = typeof data.stationName === "string" && data.stationName !== "" ? data.stationName : stationId;
+        const notice = {
+          id: localId("n"),
+          kind: "billed",
+          station,
+          workspace,
+          stationId,
+          session: "",
+          thread: null,
+          seq: null,
+          title: stationName,
+          body: t("core-misc.notice.billed", { runtime: runtimeTitle, profile }),
+          tag: `${workspace}/${stationId}/billed:${runtime}`,
+          url: `/w/${workspace}/s/${stationId}/profiles`,
+          at: typeof data.at === "number" && Number.isFinite(data.at) ? Math.trunc(data.at) : Math.trunc(core.host.nowMs()),
+        };
+        const listened = store.liveTopics().some((topic) => topic.topic === "notify" && store.subscribed(topic));
+        attend.noticed([notice], listened);
+      },
+    });
     // A registration kept: this device has pushes.
     core.runner.fork(
       Effect.map(Effect.orElseSucceed(core.host.storageGet(PUSH_KEY), () => null), (bytes) => {

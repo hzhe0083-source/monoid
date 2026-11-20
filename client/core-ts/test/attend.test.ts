@@ -276,7 +276,7 @@ test("notices_show_unless_off_looked_at_or_left_to_a_push_and_each_once", async 
   assert.ok(!attend.noticed([n("n6")], true));
   assert.deepEqual(shown(attend), []);
   const again = await run(Attend.load(host));
-  assert.deepEqual(again.value(), { on: false, asked: true, push: false, kinds: { wait: true, failed: true, done: "away", message: true }, preview: true, muted: [], permission: "unknown", show: [] });
+  assert.deepEqual(again.value(), { on: false, asked: true, push: false, kinds: { wait: true, failed: true, done: "away", message: true, billed: false }, preview: true, muted: [], permission: "unknown", show: [] });
   attend.gone(2);
   assert.ok(!attend.seen());
 });
@@ -295,17 +295,21 @@ test("only_the_kinds_turned_on_are_shown_a_turn_done_by_default_only_while_the_a
   assert.deepEqual(shown(), ["d2"]);
   attend.claim("d2");
   await run(attend.set(null, null, { done: "off", message: false }));
-  attend.noticed([n("d3", "done"), n("m2", "message"), n("f1", "failed")], true);
-  assert.deepEqual(shown(), ["f1"]);
+  attend.noticed([n("d3", "done"), n("m2", "message"), n("f1", "failed"), n("b2", "billed")], true);
+  assert.deepEqual(shown(), ["f1"], "billed is off by default");
   attend.claim("f1");
+  await run(attend.set(null, null, { billed: true }));
+  attend.noticed([n("b3", "billed")], true);
+  assert.deepEqual(shown(), ["b3"]);
+  attend.claim("b3");
   await run(attend.set(null, null, { wait: false }));
-  assert.deepEqual(attend.value().kinds, { wait: false, failed: true, done: "off", message: false }, "each given one changes, the rest stay");
+  assert.deepEqual(attend.value().kinds, { wait: false, failed: true, done: "off", message: false, billed: true }, "each given one changes, the rest stay");
   attend.focus(1, focus({ visible: false }));
   assert.ok(!attend.pushed(null, "block"));
   assert.ok(attend.pushed(null, "failed"));
   assert.ok(attend.pushed(null));
   const again = await run(Attend.load(host));
-  assert.deepEqual(again.value().kinds, { wait: false, failed: true, done: "off", message: false });
+  assert.deepEqual(again.value().kinds, { wait: false, failed: true, done: "off", message: false, billed: true });
 });
 
 test("every_workspace_is_heard_of_unless_turned_off", async () => {

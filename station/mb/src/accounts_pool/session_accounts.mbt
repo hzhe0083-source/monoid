@@ -46,6 +46,8 @@ pub struct SessionAccounts {
   asks_allows : Bool
   /// Whether `moved` tells the station.
   tells_moved : Bool
+  /// Whether `billedFallback` tells the station.
+  tells_billed_fallback : Bool
   mut health : (String) -> Health
   mut check_again : async (String) -> Unit
   mut quota_again : async (String) -> Unit
@@ -68,6 +70,7 @@ pub fn SessionAccounts::new(
   rt : @effect.Runtime,
   asks_allows? : Bool = true,
   tells_moved? : Bool = true,
+  tells_billed_fallback? : Bool = false,
 ) -> SessionAccounts {
   {
     b,
@@ -77,6 +80,7 @@ pub fn SessionAccounts::new(
     now,
     asks_allows,
     tells_moved,
+    tells_billed_fallback,
     health: _ => Health::empty(),
     check_again: async fn(_) { () },
     quota_again: async fn(_) { () },
@@ -740,6 +744,19 @@ async fn SessionAccounts::moved(self : SessionAccounts, key : String, row : Row)
 }
 
 ///|
+async fn SessionAccounts::billed_fallback(
+  self : SessionAccounts,
+  key : String,
+  row : Row,
+  runtime : String,
+  next : Profile,
+) -> Unit {
+  if self.tells_billed_fallback {
+    ignore(self.b.ask("sessions.billedFallback", [js(key), row.raw, js(runtime), next.raw]))
+  }
+}
+
+///|
 /// `runOn`: the profile a session's runtime starts on, asked again before each turn.
 pub async fn SessionAccounts::run_on(
   self : SessionAccounts,
@@ -813,6 +830,19 @@ pub async fn SessionAccounts::run_on(
       )
       if !quiet {
         self.moved(key, row)
+        let prev = match current {
+          Some(c) => Some(c)
+          None => profile_in(cfg, row.profile)
+        }
+        let prev_billed = match prev {
+          Some(p) => billed_per_use(p.raw)
+          None => false
+        }
+        if billed_per_use(next.raw) &&
+          !prev_billed &&
+          candidates.iter().any(p => !billed_per_use(p.raw)) {
+          self.billed_fallback(key, row, runtime, next)
+        }
       }
     }
   }
@@ -1092,6 +1122,15 @@ pub async fn SessionAccounts::spend(
     jobj([("session", js(key)), ("from", js(left)), ("to", js(next.id))]),
   )
   self.moved(key, row)
+  let prev_billed = match profile_in(cfg, left) {
+    Some(p) => billed_per_use(p.raw)
+    None => false
+  }
+  if billed_per_use(next.raw) &&
+    !prev_billed &&
+    all.iter().any(p => !billed_per_use(p.raw)) {
+    self.billed_fallback(key, row, runtime, next)
+  }
   Some((name(left), next.name))
 }
 
@@ -1179,6 +1218,14 @@ async fn SessionAccounts::take_across(
   )
   if !quiet {
     self.moved(key, row)
+    let prev = profile_in(cfg, left.unwrap_or(row.profile))
+    if billed_per_use(next.raw) &&
+      (match prev {
+        Some(p) => !billed_per_use(p.raw)
+        None => false
+      }) {
+      self.billed_fallback(key, row, runtime, next)
+    }
   }
   Some(next)
 }

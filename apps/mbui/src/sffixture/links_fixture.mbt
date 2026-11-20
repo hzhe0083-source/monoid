@@ -50,6 +50,10 @@ pub fn fixture_link_parse(url : String) -> Json {
     put("workspace", p[0])
     put("station", p[2])
     put("service", p[4])
+  } else if after("/w/") is Some(p) && p.length() >= 4 && p[1] == "s" && p[3] == "profiles" {
+    put("opens", "profiles")
+    put("workspace", p[0])
+    put("station", p[2])
   } else if q.contains("history") {
     put("opens", "history")
   } else {

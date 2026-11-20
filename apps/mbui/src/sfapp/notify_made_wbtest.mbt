@@ -39,6 +39,21 @@ test "通知 and 权限 made once on each screen, as a page of the settings and 
           let set = named(calls, "notify.set")
           assert_eq(set.length(), 1, msg=at)
           assert_eq(field(field(Some(set[0].params), "kinds"), "wait"), Some(Json::boolean(false)), msg=at)
+          // Pay-as-you-go fallback row: off by default, expands with only banner switch (no badge switch).
+          t.wheel(w / 2.0, 400.0, 400.0)
+          t.run_for(@ui.move_most_ms)
+          t.click(Button, label=@sf.t("web-pages.notifications.kinds.billed"))
+          t.run_for(@ui.move_most_ms)
+          t.wheel(w / 2.0, 400.0, 400.0)
+          t.run_for(@ui.move_most_ms)
+          let drawn = tree_words_drawn()
+          assert_true(drawn.iter().any(fn(o) { o.contains(@sf.t("web-pages.notifications.kinds.billed")) }), msg=at)
+          assert_false(drawn.iter().any(fn(o) { o.contains(@sf.t("web-pages.notifications.inBadge")) }), msg="billed has no badge switch at \{at}")
+          t.click(Switch, label=@sf.t("web-pages.notifications.ways.banner"))
+          t.frame()
+          let set2 = named(calls, "notify.set")
+          assert_eq(set2.length(), 2, msg=at)
+          assert_eq(field(field(Some(set2[1].params), "kinds"), "billed"), Some(Json::boolean(true)), msg=at)
         }
       }
     }

@@ -321,28 +321,37 @@ export class DirectoryStations {
 
   /**
    * Where a station's notices go: the workspace they are of (`wanted`, else the station's home), and for each email
-   * (lowercased) the registrations of the workspace's members signed in with it. Null for a station not in it.
+   * (lowercased) the registrations of the workspace's members signed in with it. When `includeManagers` is true, also
+   * returns push registrations of workspace owners and admins. Null for a station not in it.
    */
-  pushTargets(station: string, emails: string[], wanted: string | null = null): { workspace: string; devices: Record<string, PushRegistration[]> } | null {
+  pushTargets(station: string, emails: string[], wanted: string | null = null, includeManagers = false): { workspace: string; devices: Record<string, PushRegistration[]>; managers?: PushRegistration[] } | null {
     const memberships = this.#db.memberships(station);
     const workspace = wanted ?? memberships[0];
     if (!workspace || !memberships.includes(workspace)) return null;
+    const registration = (r: Record<string, unknown>): PushRegistration => {
+      const lang = langOf(r.lang as string | null);
+      const shows = typeof r.shows === "string" ? showsOf(JSON.parse(r.shows) as Record<string, unknown>) : null;
+      const id = r.id as string;
+      if (r.kind === "web") return { id, lang, shows, kind: "web", endpoint: r.endpoint as string, p256dh: r.p256dh as string, auth: r.auth as string };
+      const app = typeof r.app === "string" ? { app: r.app } : {};
+      if (r.kind === "apns") return { id, lang, shows, kind: "apns", token: r.token as string, sandbox: r.sandbox === 1, ...app };
+      return { id, lang, shows, kind: "fcm", token: r.token as string, ...app };
+    };
     const devices: Record<string, PushRegistration[]> = {};
     for (const email of new Set(emails.map((e) => e.toLowerCase()))) {
       devices[email] = this.#db.rows(
         `SELECT p.id, p.kind, p.endpoint, p.p256dh, p.auth, p.token, p.sandbox, p.lang, p.shows, p.app FROM push p JOIN users u ON u.sub = p.sub JOIN members m ON m.sub = p.sub AND m.workspace = ?
          WHERE lower(u.email) = ? ORDER BY p.id LIMIT ?`,
         workspace, email, LIMITS.pushPerUser,
-      ).map((r): PushRegistration => {
-        const lang = langOf(r.lang as string | null);
-        const shows = typeof r.shows === "string" ? showsOf(JSON.parse(r.shows) as Record<string, unknown>) : null;
-        const id = r.id as string;
-        if (r.kind === "web") return { id, lang, shows, kind: "web", endpoint: r.endpoint as string, p256dh: r.p256dh as string, auth: r.auth as string };
-        const app = typeof r.app === "string" ? { app: r.app } : {};
-        if (r.kind === "apns") return { id, lang, shows, kind: "apns", token: r.token as string, sandbox: r.sandbox === 1, ...app };
-        return { id, lang, shows, kind: "fcm", token: r.token as string, ...app };
-      });
+      ).map(registration);
     }
-    return { workspace, devices };
+    const managers = includeManagers
+      ? this.#db.rows(
+          `SELECT p.id, p.kind, p.endpoint, p.p256dh, p.auth, p.token, p.sandbox, p.lang, p.shows, p.app FROM push p JOIN members m ON m.sub = p.sub AND m.workspace = ?
+           WHERE m.role IN ('owner', 'admin') ORDER BY p.id LIMIT ?`,
+          workspace, 200,
+        ).map(registration)
+      : undefined;
+    return { workspace, devices, ...(includeManagers ? { managers } : {}) };
   }
 }

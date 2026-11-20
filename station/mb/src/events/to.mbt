@@ -122,6 +122,10 @@ pub fn is_for(
     !(r is Bool(b) && b == read_only(viewer.role)) {
     return false
   }
+  if to.get("managers") is Some(m) &&
+    !(m is Bool(b) && b == manages_station(viewer.role)) {
+    return false
+  }
   if to.get("vault") is Some(v) {
     guard in_vault is Some(f) && f(viewer, string_of(Some(v))) else {
       return false

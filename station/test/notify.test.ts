@@ -246,3 +246,66 @@ test("what a login's card asks says how long is left to log in; another card's, 
   ]);
   notifier.close();
 });
+
+test("billed-fallback notices cool down per workspace and runtime for 4 hours and strip internal ws before posting", async (t) => {
+  const scope = Effect.runSync(Scope.make());
+  t.after(() => Effect.runPromise(Scope.close(scope, Exit.void)));
+  const clock = Effect.runSync(Scope.provide(TestClock.make(), scope));
+  const store: any = { subscribe: () => () => {}, sessionWs: () => null };
+  const readers: any = { read: async () => "[]" };
+  const cloud: any = Object.assign(Object.create(Cloud.prototype), {
+    state: {
+      origin: "http://x",
+      station: "s",
+      workspace: "ws-home",
+      workspace_name: "Home",
+      name: "willow",
+      peers: [],
+      revocations: [],
+      joined: [{ workspace: "ws-joined", workspace_name: "Joined", name: "willow-joined", peers: [], revocations: [] }],
+    },
+    lock: null,
+  });
+  const posted: { notices: any[]; ws: string | undefined }[] = [];
+  const notifier = new Notifier(store, readers, cloud, async (notices, ws) => {
+    posted.push({ notices, ws });
+  }, { clock });
+  const settle = () => new Promise((r) => setImmediate(r));
+  const t0 = 1_790_000_000_000;
+  // First fallback in home workspace for claude -> accepted.
+  assert.equal(notifier.notifyBilledFallback({ workspace: null, runtime: "claude", runtimeTitle: "Claude Code", profile: "OpenRouter", at: t0 }), true);
+  // Second within 4h for same (ws-home, claude) -> suppressed.
+  assert.equal(notifier.notifyBilledFallback({ workspace: "ws-home", runtime: "claude", runtimeTitle: "Claude Code", profile: "OpenRouter", at: t0 + 3 * 60 * 60 * 1000 }), false);
+  // Different runtime in same workspace -> accepted.
+  assert.equal(notifier.notifyBilledFallback({ workspace: "ws-home", runtime: "codex", runtimeTitle: "Codex", profile: "API Key", at: t0 + 1_000 }), true);
+  // Different workspace (joined) for claude -> accepted and routed with explicit workspace.
+  assert.equal(notifier.notifyBilledFallback({ workspace: "ws-joined", runtime: "claude", runtimeTitle: "Claude Code", profile: "OpenRouter", at: t0 + 2_000 }), true);
+  // After 4 hours -> accepted again.
+  assert.equal(notifier.notifyBilledFallback({ workspace: "ws-home", runtime: "claude", runtimeTitle: "Claude Code", profile: "OpenRouter", at: t0 + 4 * 60 * 60 * 1000 }), true);
+
+  for (let i = 0; i < 10 && posted.length < 2; i++) {
+    await Effect.runPromise(clock.adjust("1 second"));
+    for (let j = 0; j < 5; j++) await settle();
+  }
+  const homeBatch = posted.find((p) => p.ws === undefined);
+  const joinedBatch = posted.find((p) => p.ws === "ws-joined");
+  assert.ok(homeBatch);
+  assert.ok(joinedBatch);
+  assert.equal(homeBatch.notices.length, 3);
+  assert.equal(joinedBatch.notices.length, 1);
+  assert.deepEqual(homeBatch.notices[0], {
+    to: [],
+    audience: "managers",
+    kind: "billed",
+    session: "billed:claude",
+    thread: 0,
+    seq: null,
+    title: "willow",
+    by: "Claude Code",
+    text: "OpenRouter",
+    at: t0,
+  });
+  assert.equal("ws" in homeBatch.notices[0], false, "internal ws routing field stripped on wire");
+  assert.equal(joinedBatch.notices[0].title, "willow-joined");
+  notifier.close();
+});

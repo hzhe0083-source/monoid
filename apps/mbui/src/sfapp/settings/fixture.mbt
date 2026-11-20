@@ -3745,7 +3745,7 @@ pub fn fixture_topic(mode : String, name : String, params : Map[String, Json]) -
           ("asked", Json::boolean(true)),
           ("push", Json::boolean(false)),
           ("show", []),
-          ("kinds", obj([("wait", Json::boolean(true)), ("failed", Json::boolean(true)), ("done", str("away")), ("message", Json::boolean(false))])),
+          ("kinds", obj([("wait", Json::boolean(true)), ("failed", Json::boolean(true)), ("done", str("away")), ("message", Json::boolean(false)), ("billed", Json::boolean(false))])),
           ("preview", Json::boolean(true)),
           ("permission", str(if mode.has_prefix("settings-notify-denied") { "denied" } else { "granted" })),
           // (the account's two workspaces, 个人 turned off)

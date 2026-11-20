@@ -1343,12 +1343,15 @@ web-pages.localStation.update
 web-pages.notifications.enable.allow
 web-pages.notifications.enable.browser
 web-pages.notifications.enable.open
+web-pages.notifications.hidden.billed
 web-pages.notifications.hidden.done
 web-pages.notifications.hidden.failed
 web-pages.notifications.hidden.message
 web-pages.notifications.hidden.wait
 web-pages.notifications.inBadge
 web-pages.notifications.inBell
+web-pages.notifications.kinds.billed
+web-pages.notifications.kinds.billedNote
 web-pages.notifications.kinds.done
 web-pages.notifications.kinds.doneAlways
 web-pages.notifications.kinds.doneAway
@@ -1373,6 +1376,8 @@ web-pages.notifications.on
 web-pages.notifications.preview
 web-pages.notifications.previewLabel
 web-pages.notifications.previewNote
+web-pages.notifications.sample.billed
+web-pages.notifications.sample.billedTitle
 web-pages.notifications.sample.done
 web-pages.notifications.sample.failed
 web-pages.notifications.sample.message

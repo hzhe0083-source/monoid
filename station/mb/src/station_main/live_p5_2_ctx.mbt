@@ -55,6 +55,8 @@ priv struct P52 {
   mut runner_all : Map[String, String]?
   /// The runners no session has (`unnamed`): asked of `listSessions` once.
   runner_unnamed : Set[String]
+  /// Last time a billed-per-use fallback alert was emitted, by `<workspace>\0<runtime>`.
+  billed_notified : Map[String, Int64]
 }
 
 ///|

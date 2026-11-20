@@ -40,7 +40,7 @@ import { AdminHost, ControlPlane, Events, Grants, HelperFolders, Key, Own, Parts
 import { claudeCredentialsFile, codexAuthFile } from "../agents/machine-logins.ts";
 import { permissionsView } from "../api/routes/permissions.ts";
 import { Net, measure } from "../jobs/load.ts";
-import { Notifier } from "../cloud/notify.ts";
+import { BilledCooldown, Notifier } from "../cloud/notify.ts";
 import { type Cloud as CloudState, rigGrantsPath } from "../cloud/state.ts";
 import { screenTools } from "../tools/screen.ts";
 import { permissionTools } from "../tools/permissions.ts";
@@ -78,7 +78,7 @@ import type { Viewer } from "../mesh/credential.ts";
 import { stationLang, tr, type Lang } from "../ops/i18n.ts";
 import { type Updates, makeUpdates } from "../updates/updates.ts";
 import { channelOf } from "../updates/versions.ts";
-import { type Connect, hubConfig } from "./config.ts";
+import { type Connect, hubConfig, runtimeTitle } from "./config.ts";
 import type { TailState } from "../read/transcript.ts";
 import { followLatestThreadRequests } from "../read/latest-thread-requests.ts";
 import { ColdRooms } from "./cold.ts";
@@ -937,6 +937,19 @@ export const AgentsLive = (control: Control) =>
 
       // What the chats' people hear about while no client of theirs runs: pushed by the control plane.
       const notifier = new Notifier(store, readers, cloud, (notices, ws) => Effect.runPromise(plane.notify(notices, ws)), { now: () => hub.clock.currentTimeMillisUnsafe(), deadline: (login) => hub.logins?.deadline?.(login) ?? null });
+      const billedCooldown = new BilledCooldown();
+      hub.onBilledFallback = (info) => {
+        const ws = info.workspace ?? cloud.home();
+        if (ws === null || cloud.membership(ws) === null) return;
+        const at = hub.now();
+        if (!billedCooldown.take(ws, info.runtime, at)) return;
+        const title = runtimeTitle(info.runtime);
+        const stationName = cloud.membership(ws)?.name ?? cloud.state?.name ?? "still.fail";
+        if (cloud.provider() === "stillfail") {
+          notifier.notifyBilledFallback({ workspace: ws, runtime: info.runtime, runtimeTitle: title, profile: info.profile.name, at }, { cooled: true });
+        }
+        events.sendLive("billed-fallback", { runtime: info.runtime, runtimeTitle: title, profile: info.profile.name, stationName, at }, { managers: true, workspace: ws });
+      };
 
       // What runs on a clock here (on the hub's): ended at the handover, below.
       const time = new Fibers("station", hub.clock);

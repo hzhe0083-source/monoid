@@ -70,6 +70,7 @@ pub async fn start_live_p5_2(bus : LiveBus) -> Unit {
     read_lately: Map([]),
     runner_all: None,
     runner_unnamed: Set::new(),
+    billed_notified: Map([]),
   }
   p52_lang_fn.val = () => ctx.lang()
   // The cards' queued outcomes, written by the parts that decide a card (the rigs, the phones, the vault) and their
@@ -1224,6 +1225,86 @@ async fn P52::hub_op(self : P52, op : String, arg : Json) -> Json {
           )
         }
         _ => ()
+      }
+      Json::null()
+    }
+    "sessions.billedFallback" => {
+      let a = jitems(arg)
+      let key = opt_str(a.get(0)).unwrap_or("")
+      let was = a.get(1).unwrap_or(Json::null())
+      let runtime = opt_str(a.get(2)).unwrap_or("")
+      let next = a.get(3).unwrap_or(Json::null())
+      if !hub.handed_over(key) && runtime != "" {
+        let ws = match jtext(was, "ws") {
+          Some(w) if w != "" => Some(w)
+          _ => self.workspaces().get(0)
+        }
+        match ws {
+          Some(ws) => {
+            let at = wall_ms()
+            let ck = "\{ws}\u{0}\{runtime}"
+            let cooled = match self.billed_notified.get(ck) {
+              Some(prev) if at - prev < @cloud_net.billed_notify_cooldown_ms => false
+              _ => true
+            }
+            if cooled {
+              self.billed_notified[ck] = at
+              let runtime_title = @session_hub.runtime_label(runtime)
+              let profile = jtext(next, "name").unwrap_or(jtext(next, "id").unwrap_or(""))
+              let cloud = (self.bus.cloud_state.val)()
+              let station_name = match cloud {
+                Some(Object(c)) => jtext(Json::object(c), "name").unwrap_or("still.fail")
+                _ => "still.fail"
+              }
+              (self.bus.events_send_live.val)(
+                "billed-fallback",
+                {
+                  "runtime": Json::string(runtime),
+                  "runtimeTitle": Json::string(runtime_title),
+                  "profile": Json::string(profile),
+                  "stationName": Json::string(station_name),
+                  "at": Json::number(at.to_double()),
+                },
+                {
+                  "managers": Json::boolean(true),
+                  "workspace": Json::string(ws),
+                },
+              )
+              let is_stillfail = match cloud {
+                Some(c) => @cloud_net.provider_of(Some(jfield(c, "provider"))) is Stillfail
+                None => false
+              }
+              if is_stillfail {
+                let notice : Json = {
+                  "to": Json::array([]),
+                  "audience": Json::string("managers"),
+                  "kind": Json::string("billed"),
+                  "session": Json::string("billed:\{runtime}"),
+                  "thread": Json::number(0.0),
+                  "seq": Json::null(),
+                  "title": Json::string(station_name),
+                  "by": Json::string(runtime_title),
+                  "text": Json::string(profile),
+                  "at": Json::number(at.to_double()),
+                }
+                let home = self.workspaces().get(0)
+                let body : Json = if Some(ws) == home {
+                  { "notices": Json::array([notice]) }
+                } else {
+                  { "notices": Json::array([notice]), "workspace": Json::string(ws) }
+                }
+                ignore(
+                  self.host.rt.fork_quiet(name="billed fallback notify", async fn() {
+                    ignore((self.bus.cloud_call.val)("notify", body)) catch {
+                      _ => ()
+                    }
+                  }),
+                )
+              }
+            }
+          }
+          None => ()
+        }
       }
       Json::null()
     }
