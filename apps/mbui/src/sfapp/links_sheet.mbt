@@ -159,7 +159,7 @@ fn invite_signed_out(src : Source) -> Bool {
 /// cannot be used, that it is read.
 fn invite_title(src : Source) -> String {
   if invite_signed_out(src) {
-    return fill("android-misc.signIn.title", [("app", "still.fail")])
+    return fill("android-misc.signIn.title", [("app", @sf.product())])
   }
   match (invite.token.get(), invite_read(src)) {
     (None, _) => tr("android-misc.invite.byLink")
@@ -227,7 +227,7 @@ fn invite_node(v : @view.View, src : Source) -> Unit {
     }
     match at {
       InviteSignIn => {
-        lead(fn() { fill("android-misc.signIn.invited", [("app", "still.fail")]) })
+        lead(fn() { fill("android-misc.signIn.invited", [("app", @sf.product())]) })
         buttons(fn(b) {
           @sf.button_node(b, fn() { tr("common.cancel") }, lower_sheet) |> ignore
           @sf.button_node(b, fn() { tr("android-misc.signIn.google") }, fn() { (src.sign_in)() }, tone=Primary, busy=fn() {
@@ -237,7 +237,7 @@ fn invite_node(v : @view.View, src : Source) -> Unit {
         })
       }
       InvitePaste => {
-        lead(fn() { fill("android-misc.invite.pasteLink", [("app", "still.fail")]) })
+        lead(fn() { fill("android-misc.invite.pasteLink", [("app", @sf.product())]) })
         let words = @signals.signal(invite.field.text())
         // (the link pasted in a rectangle with rounded corners (invite_corner), two lines of it at most, not a capsule)
         @sf.textarea_node(p, invite.field, rows=1, most=2, corner=invite_corner, placeholder="https://app.still.fail/invite#…", edited=fn(w) {

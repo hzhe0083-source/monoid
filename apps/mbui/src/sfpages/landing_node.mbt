@@ -128,9 +128,9 @@ fn landing_page_node(parent : @view.View, src : Source, entries : () -> Array[Js
     })
     col.show(fn() { shown() == 1 }, fn(b) {
       landing_column(b)
-      @sf.way_in_title_node(b, fn() { @sf.t("android-misc.invite.onlyInvited", args=[("app", "still.fail")]) }) |> ignore
+      @sf.way_in_title_node(b, fn() { @sf.t("android-misc.invite.onlyInvited", args=[("app", @sf.product())]) }) |> ignore
       @sf.way_in_note_node(b, fn() {
-        @sf.t("android-misc.invite.codeLead", args=[("app", "still.fail"), ("email", text(first(), "email"))])
+        @sf.t("android-misc.invite.codeLead", args=[("app", @sf.product()), ("email", text(first(), "email"))])
       })
       |> ignore
       invite_code_form_node(b, src, first)
@@ -140,7 +140,7 @@ fn landing_page_node(parent : @view.View, src : Source, entries : () -> Array[Js
       landing_column(b)
       @sf.way_in_title_node(b, fn() { @sf.t("android-misc.workspace.none") }) |> ignore
       @sf.way_in_note_node(b, fn() {
-        @sf.t("android-misc.workspace.none.lead", args=[("app", "still.fail"), ("email", text(first(), "email"))])
+        @sf.t("android-misc.workspace.none.lead", args=[("app", @sf.product()), ("email", text(first(), "email"))])
       })
       |> ignore
       @sf.way_in_button_node(

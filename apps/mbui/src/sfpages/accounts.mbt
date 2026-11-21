@@ -543,10 +543,10 @@ fn profile_menu(core : Core, here : Here, address : String, p : Json?, from : @s
     let (title, words) = if machine {
       (
         @sf.t("web-pages.profiles.disableConfirm", args=[("name", text(p, "name"))]),
-        @sf.t("web-pages.profiles.disableBody", args=[("name", "still.fail"), ("runtime", @settings.runtime_label(text(p, "runtime")))]),
+        @sf.t("web-pages.profiles.disableBody", args=[("name", @sf.product()), ("runtime", @settings.runtime_label(text(p, "runtime")))]),
       )
     } else {
-      (@sf.t("web-pages.archive.deleteConfirm", args=[("title", text(p, "name"))]), @sf.t("web-pages.profiles.deleteBody", args=[("name", "still.fail")]))
+      (@sf.t("web-pages.archive.deleteConfirm", args=[("title", text(p, "name"))]), @sf.t("web-pages.profiles.deleteBody", args=[("name", @sf.product())]))
     }
     confirm(title, words, item, danger=true, fn() {
       // closed where its page was pushed on the stack; in the profiles' place it stays on the place, which moves on to
@@ -664,7 +664,7 @@ fn profile_sign_in_node(
             match state() {
               "failed" => ""
               "done" => @sf.t("web-pages.profiles.signedInSwitch")
-              _ => @sf.t("web-pages.profiles.signInNote", args=[("name", "still.fail")])
+              _ => @sf.t("web-pages.profiles.signInNote", args=[("name", @sf.product())])
             }
           },
           bad=fn() { if state() == "failed" { @sf.t("web-pages.profiles.lastFailed", args=[("error", text(job(), "error"))]) } else { "" } },
@@ -884,11 +884,11 @@ pub fn login_steps_node(
           @sf.style_node(st, fn() { pf_step })
           @sf.words_node(st, fn() {
             if provider() == "Devin" {
-              @sf.t("web-pages.profiles.step1Devin", args=[("name", "still.fail")])
+              @sf.t("web-pages.profiles.step1Devin", args=[("name", @sf.product())])
             } else if provider() == "Google" {
-              @sf.t("web-pages.profiles.step1Google", args=[("name", "still.fail")])
+              @sf.t("web-pages.profiles.step1Google", args=[("name", @sf.product())])
             } else {
-              @sf.t("web-pages.profiles.step1", args=[("name", "still.fail")])
+              @sf.t("web-pages.profiles.step1", args=[("name", @sf.product())])
             }
           }, fn() { pf_words })
           |> ignore
@@ -980,7 +980,7 @@ pub fn login_steps_node(
                 "OpenCode" => @sf.t("web-pages.profiles.deviceCodeNoteOpencode")
                 "Kimi" => @sf.t("web-pages.profiles.deviceCodeNoteKimi")
                 "Grok" => @sf.t("web-pages.profiles.deviceCodeNoteGrok")
-                _ => @sf.t("web-pages.profiles.deviceCodeNote", args=[("name", "still.fail")])
+                _ => @sf.t("web-pages.profiles.deviceCodeNote", args=[("name", @sf.product())])
               }
             }
           }, fn() { pf_muted })

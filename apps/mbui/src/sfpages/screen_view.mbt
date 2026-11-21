@@ -1084,7 +1084,7 @@ fn screen_copies(s : ScreenSess) -> Unit {
   s.copied.clear()
   let label = match opt_text(s.state, "title") {
     Some(t) if t != "" => t
-    _ => "still.fail"
+    _ => @sf.product()
   }
   let types = s.clip_types()
   for g in got {

@@ -276,7 +276,7 @@ fn system_said(json : String) -> Unit {
       // one of the pages' actions from the menu bar: done as its keys are (keymap.mbt ask_action)
       Menu(action) => @settings.ask_action(action)
       // a package handed to the system's installer could not be installed
-      InstallAllow(..) => toast_later(@sf.t("android-chat.file.allowInstall", args=[("app", "still.fail")]))
+      InstallAllow(..) => toast_later(@sf.t("android-chat.file.allowInstall", args=[("app", @sf.product())]))
       InstallFailed(error~, ..) => toast_later(@sf.t("android-chat.file.installFailed", args=[("error", error)]))
       Network =>
         (src.call)(

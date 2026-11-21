@@ -768,7 +768,7 @@ fn machine_offers_node(
                     if usable {
                       @sf.t("web-pages.profiles.useMachineTip")
                     } else {
-                      @sf.t("web-pages.profiles.keychainTip", args=[("name", "still.fail")])
+                      @sf.t("web-pages.profiles.keychainTip", args=[("name", @sf.product())])
                     }
                   })
                   |> ignore
@@ -809,7 +809,7 @@ pub fn profiles_first_node(
     @sf.first_one_node(
       b,
       fn() { @sf.t("web-pages.settings.profiles.addFirst") },
-      lead=fn() { @sf.t("web-pages.settings.profiles.lead", args=[("name", "still.fail")]) },
+      lead=fn() { @sf.t("web-pages.settings.profiles.lead", args=[("name", @sf.product())]) },
       art=fn(a) { a.pick(fn() { @sf.theme().dark }, fn(x, dark) { @sf.drawable_node(x, if dark { "illus_no_profile_dark" } else { "illus_no_profile" }, pf_first_art_w) |> ignore }) },
       fn(a) {
         a.box(fn(l) {

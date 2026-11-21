@@ -249,7 +249,7 @@ pub fn notices_frame(src : Source, w : Workspace) -> Unit {
         "denied"
       }
       if state == "denied" && notice_state.from_switch {
-        toast_later(@sf.t("android-misc.notify.allowInSettings", args=[("app", "still.fail")]))
+        toast_later(@sf.t("android-misc.notify.allowInSettings", args=[("app", @sf.product())]))
       }
       notice_state.from_switch = false
       (src.call)("notify.permission", { "state": Json::string(state) }, answer_unread)

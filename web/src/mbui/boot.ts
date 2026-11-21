@@ -2,6 +2,7 @@
 // script on their way), taken away once the app's first frame is on the canvas, so nothing of it is left to lay out or
 // draw after. A load that fails, or that takes far longer than it should, says so under the mark with a way to load the
 // page again, as an app on the home screen has no reload of its own.
+import { productOf } from "../../../client/i18n/brand.ts";
 import { chineseFor } from "./gpu.ts";
 
 /** How long a load may take before the page offers to load it again (index.html's splash waits as long). */
@@ -25,10 +26,12 @@ function offerReload(failed: boolean): void {
   const b = boot();
   if (!b || b.querySelector(".again")) return;
   const z = zh();
+  // (the product this host is: monoid on monoid's, client/i18n/brand.ts)
+  const name = productOf(location.hostname).name;
   const said = document.createElement("p");
   said.className = "said";
   said.textContent = failed
-    ? z ? "still.fail 没有加载完成，检查网络后重新加载。" : "still.fail did not finish loading. Check the connection and load it again."
+    ? z ? `${name} 没有加载完成，检查网络后重新加载。` : `${name} did not finish loading. Check the connection and load it again.`
     : z ? "加载得比平常久，可以重新加载。" : "This is taking longer than usual.";
   const again = document.createElement("button");
   again.type = "button";

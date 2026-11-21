@@ -100,7 +100,51 @@ fn word_at(chars : Array[Char], i : Int, word : Array[Char]) -> Bool {
 /// address (app.still.fail, https://still.fail, noreply@still.fail, still.fail.app).
 pub fn branded(text : String) -> String {
   let name = product()
-  if name == "still.fail" || !text.contains("still.fail") {
+  if name == "still.fail" {
+    return text
+  }
+  commanded(named(text, name), name)
+}
+
+///|
+/// still.fail's command and home made `name`'s where `name` is a plain word (monoid: `monoid start`, ~/.monoid), as
+/// client/i18n/brand.ts COMMAND: `stillfail` standing alone, after `~/.`, or before `-station`; never a part of a
+/// longer name (stillfail-screen, STILLFAIL_DATA, @stillfail/ui, stillfail.db).
+fn commanded(text : String, name : String) -> String {
+  if !text.contains("stillfail") || name.is_empty() || !name.to_array().iter().all(fn(c) { (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') }) {
+    return text
+  }
+  let chars = text.to_array()
+  let word = "stillfail".to_array()
+  let station = "-station".to_array()
+  let out = StringBuilder()
+  let mut i = 0
+  while i < chars.length() {
+    let j = i + word.length()
+    let at = word_at(chars, i, word)
+    let home = at && i >= 3 && chars[i - 1] == '.' && (chars[i - 2] == '/' || chars[i - 2] == '\\') && chars[i - 3] == '~'
+    let alone = at &&
+      !home &&
+      (i == 0 || !(name_char(chars[i - 1]) || chars[i - 1] == '.' || chars[i - 1] == '/' || chars[i - 1] == '@' || chars[i - 1] == '\\' || chars[i - 1] == '~')) &&
+      (j >= chars.length() ||
+      !(name_char(chars[j]) || chars[j] == '.' || chars[j] == '/' || chars[j] == '@' || chars[j] == '\\') ||
+      (chars[j] == '-' && word_at(chars, j, station)))
+    let home_ok = home && (j >= chars.length() || !(name_char(chars[j]) || chars[j] == '.'))
+    if alone || home_ok {
+      out.write_string(name)
+      i = j
+    } else {
+      out.write_char(chars[i])
+      i += 1
+    }
+  }
+  out.to_string()
+}
+
+///|
+/// `text` with still.fail's name standing alone `name`.
+fn named(text : String, name : String) -> String {
+  if !text.contains("still.fail") {
     return text
   }
   let chars = text.to_array()

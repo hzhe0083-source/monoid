@@ -266,7 +266,7 @@ pub fn connects_node(
     },
     on_back~,
     frame~,
-    about=fn() { @sf.t("web-pages.connects.about", args=[("name", "still.fail")]) },
+    about=fn() { @sf.t("web-pages.connects.about", args=[("name", @sf.product())]) },
     actions~,
     said?,
     width?,
@@ -842,7 +842,7 @@ fn cn_waiting_app_node(
     let (name, st, id) = @signals.untracked(fn() { (text(av(), "name"), station(), app_id()) })
     confirm(
       @sf.t("web-pages.settings.stations.removeConfirm", args=[("name", name)]),
-      @sf.t("web-pages.connects.removeBody", args=[("name", "still.fail")]),
+      @sf.t("web-pages.connects.removeBody", args=[("name", @sf.product())]),
       @sf.t("android-settings.members.remove"),
       danger=true,
       fn() {

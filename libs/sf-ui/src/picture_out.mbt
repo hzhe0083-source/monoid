@@ -27,7 +27,7 @@ pub fn picture_out_way() -> (String, String) {
 pub let picture_out_by : Ref[(@ui.Ctx, Bytes?, Bool) -> Bool] = Ref(fn(_, png, _) {
   match png {
     Some(png) => {
-      @ui.clipboard_set_png(png, label="still.fail")
+      @ui.clipboard_set_png(png, label=product())
       true
     }
     None => false
@@ -41,7 +41,7 @@ pub let picture_out_by : Ref[(@ui.Ctx, Bytes?, Bool) -> Bool] = Ref(fn(_, png, _
 pub let picture_out_now_by : Ref[(Bytes?, Bool) -> Bool] = Ref(fn(png, _) {
   match png {
     Some(png) => {
-      @ui.clipboard_set_png(png, label="still.fail")
+      @ui.clipboard_set_png(png, label=product())
       true
     }
     None => false

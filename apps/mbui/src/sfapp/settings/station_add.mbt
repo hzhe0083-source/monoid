@@ -224,7 +224,7 @@ fn add_station_body(
         @sf.style_node(n, fn() { @sf.panel_words_in_node(n).then(add_kind_room) })
         @sf.words_node(
           n,
-          fn() { if adding.tasks.get() { tr("web-pages.rigs.add.lead") } else { fill("android-settings.station.addNote", [("app", "still.fail")]) } },
+          fn() { if adding.tasks.get() { tr("web-pages.rigs.add.lead") } else { fill("android-settings.station.addNote", [("app", @sf.product())]) } },
           fn() { add_note_words },
         )
         |> ignore
@@ -607,7 +607,7 @@ fn add_station_steps_node(
             @sf.words_node(d, fn() { tr("android-settings.station.runDocker") }, fn() { step_label_words }) |> ignore
             command_node(d, docker)
           })
-          @sf.words_node(b, fn() { fill("android-settings.station.runNote", [("app", "still.fail")]) }, fn() { step_note_words })
+          @sf.words_node(b, fn() { fill("android-settings.station.runNote", [("app", @sf.product())]) }, fn() { step_note_words })
           |> ignore
           @sf.wait_line_node(b, fn() { tr("android-settings.station.waiting") }) |> ignore
         }

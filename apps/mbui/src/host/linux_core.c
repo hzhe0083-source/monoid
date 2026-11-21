@@ -258,7 +258,9 @@ static int secure_set(const char *key, int user, const uint8_t *bytes, size_t bl
   if (keyring()) {
     GError *e = NULL;
     SecretValue *v = secret_value_new((const gchar *)bytes, (gssize)blen, "application/octet-stream");
-    char *label = g_strdup_printf("still.fail: %s", key);
+    // (its product's name: MBUI_PRODUCT, monoid's apps; else still.fail)
+    const char *product = getenv("MBUI_PRODUCT");
+    char *label = g_strdup_printf("%s: %s", product && *product ? product : "still.fail", key);
     int ok = secret_password_store_binary_sync(schema(), SECRET_COLLECTION_DEFAULT, label, v, NULL, &e, "key", key,
                                                "user", user ? TRUE : FALSE, NULL);
     g_free(label);

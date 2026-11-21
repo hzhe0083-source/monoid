@@ -130,7 +130,7 @@ pub fn new_chat_node(v : @view.View, src : Source, w : Workspace, frame : NewCha
           })
         NoneUp =>
           new_alone_node(p, "illus_station_offline", fn() { @sf.t("android-chat.new.offline.title") }, fn() {
-            @sf.t("android-chat.new.offline.text", args=[("app", "still.fail")])
+            @sf.t("android-chat.new.offline.text", args=[("app", @sf.product())])
           })
       }
     })

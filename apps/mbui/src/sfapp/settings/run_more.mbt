@@ -317,7 +317,7 @@ pub fn open_machine_sessions(core : Core, station : String, name : String) -> Un
                   lead=fn(m) { @sf.maker_mark_node(m, "", @signals.untracked(fn() { text(sv(), "runtime") }), machine_mark) |> ignore },
                   tag=fn(g) {
                     g.show(at_once=true, fn() { has(sv(), "session") }, fn(p) {
-                      @sf.pill_node(p, fn() { fill("android-chat.new.machine.inApp", [("app", "still.fail")]) }) |> ignore
+                      @sf.pill_node(p, fn() { fill("android-chat.new.machine.inApp", [("app", @sf.product())]) }) |> ignore
                     })
                   },
                   trail=fn(t) { @sf.words_node(t, fn() { text(sv(), "when") }, fn() { machine_when }) |> ignore },
@@ -755,7 +755,7 @@ fn add_people_body(v : @view.View, core : Core, here : Here, st : AddPeople) -> 
       @sf.style_node(n, fn() { @sf.panel_words_in_node(n).then(full_room) })
       @sf.words_node(
         n,
-        fn() { fill("android-settings.add.note", [("name", text(st.view, "name")), ("app", "still.fail")]) },
+        fn() { fill("android-settings.add.note", [("name", text(st.view, "name")), ("app", @sf.product())]) },
         fn() { add_note_words },
       )
       |> ignore
@@ -1016,7 +1016,7 @@ fn add_people_go(core : Core, here : Here, st : AddPeople) -> Unit {
               join(
                 [
                   if n("joined") > 0 { fill("android-settings.add.joined", [("n", n("joined").to_string())]) } else { "" },
-                  if n("added") > 0 { fill("android-settings.add.added", [("n", n("added").to_string()), ("app", "still.fail")]) } else { "" },
+                  if n("added") > 0 { fill("android-settings.add.added", [("n", n("added").to_string()), ("app", @sf.product())]) } else { "" },
                   if n("already") > 0 { fill("android-settings.add.already", [("n", n("already").to_string())]) } else { "" },
                   // (the cloud mails each one added; one it could not is sent again as they are added again)
                   if n("unmailed") > 0 { fill("android-settings.add.unmailed", [("n", n("unmailed").to_string())]) } else { "" },

@@ -225,14 +225,14 @@ fn token_fields_node(
 fn create_app_steps_node(b : @view.View, core : Core, station : String, name : () -> String) -> Unit {
   let named = fn() {
     match name().trim(chars=" \t\n").to_owned() {
-      "" => "still.fail"
+      "" => @sf.product()
       n => n
     }
   }
   let words = fn(s : @view.View, w : () -> String) { @sf.words_node(s, w, fn() { @sf.step_words }) |> ignore }
   @sf.steps_node(b, [
     fn(s) {
-      words(s, fn() { @sf.t("web-main.slack.step.create", args=[("app", "still.fail"), ("name", named())]) })
+      words(s, fn() { @sf.t("web-main.slack.step.create", args=[("app", @sf.product()), ("name", named())]) })
       @sf.button_node(
         s,
         fn() { @sf.t("web-main.slack.create") },

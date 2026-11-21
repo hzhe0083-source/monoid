@@ -627,7 +627,7 @@ fn station_remove_ask(core : Core, here : Here, s : Json?) -> Unit {
   let address = text(s, "station")
   confirm(
     @sf.t("web-pages.settings.stations.removeConfirm", args=[("name", text(s, "name"))]),
-    @sf.t("web-pages.settings.stations.removeConfirmBody", args=[("name", "still.fail")]),
+    @sf.t("web-pages.settings.stations.removeConfirmBody", args=[("name", @sf.product())]),
     @sf.t("web-pages.settings.stations.removeAction"),
     danger=true,
     // closed where its page (or its move page) was pushed on the stack; in the stations' place it stays on the place,

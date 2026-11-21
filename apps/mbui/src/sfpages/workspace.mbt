@@ -556,7 +556,7 @@ fn new_workspace_body(v : @view.View, src : Source, close : () -> Unit) -> Unit 
         })
         |> ignore
       },
-      hint=fn() { @sf.t("web-pages.workspace.codeHint", args=[("name", "still.fail")]) },
+      hint=fn() { @sf.t("web-pages.workspace.codeHint", args=[("name", @sf.product())]) },
       error=fn() { if wants_code() && code() != "" { new_ws.error.get() } else { "" } },
     )
   })

@@ -3288,7 +3288,7 @@ fn ref_menu_node(box : @view.View, src : Source, r : ChatRef, w : Writing) -> Un
           match said {
             1 => @sf.wait_line_node(p, fn() { @sf.t("common.reading") }) |> ignore
             2 =>
-              @sf.words_node(p, fn() { @sf.t("web-main.chatRef.update", args=[("app", "still.fail")]) }, fn() {
+              @sf.words_node(p, fn() { @sf.t("web-main.chatRef.update", args=[("app", @sf.product())]) }, fn() {
                 ref_empty_words
               })
               |> ignore

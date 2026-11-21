@@ -911,7 +911,7 @@ fn new_none_up(c : @ui.Ctx) -> Unit {
     c,
     if @sf.theme().dark { "illus_station_offline_dark" } else { "illus_station_offline" },
     @sf.t("android-chat.new.offline.title"),
-    @sf.t("android-chat.new.offline.text", args=[("app", "still.fail")]),
+    @sf.t("android-chat.new.offline.text", args=[("app", @sf.product())]),
   )
 }
 

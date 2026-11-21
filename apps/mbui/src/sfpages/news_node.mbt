@@ -77,7 +77,7 @@ pub fn update_card_node(parent : @view.View, src : Source) -> Unit {
     fn() { @sf.t("android-misc.updates.allow") },
     fn() { @sfbase.update_go(src) },
     fn(words) {
-      @sf.words_node(words, fn() { @sf.t("android-misc.updates.allowWhy", args=[("app", "still.fail")]) }, fn() {
+      @sf.words_node(words, fn() { @sf.t("android-misc.updates.allowWhy", args=[("app", @sf.product())]) }, fn() {
         @sf.news_card_note
       })
       |> ignore

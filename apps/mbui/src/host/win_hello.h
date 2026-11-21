@@ -240,7 +240,11 @@ static const char *win_hello_ask(HWND window, const char *reason_utf8) {
   // a window shown to ask over (not asked to be in front: the person may be reading a pairing's code in another
   // app's, as the Mac's prompt comes over whatever is in front)
   if (!window || !IsWindow(window) || !IsWindowVisible(window) || IsIconic(window)) return "not_in_front";
-  if (!reason_utf8 || !*reason_utf8) reason_utf8 = "still.fail";
+  if (!reason_utf8 || !*reason_utf8) {
+    // (its product's name: MBUI_PRODUCT, monoid's apps; else still.fail)
+    const char *product = getenv("MBUI_PRODUCT");
+    reason_utf8 = product && *product ? product : "still.fail";
+  }
   int mine = 0;
   HRESULT hr = win_hello_begin(&mine);
   if (FAILED(hr)) return win_hello_hresult_error(hr);

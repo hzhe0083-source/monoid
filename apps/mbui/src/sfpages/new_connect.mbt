@@ -429,7 +429,7 @@ fn nc_body_node(
           token_fields_node(k, core, tk, install=opt_text(@signals.untracked(made), "install") is Some(_))
         }
         "manual" => {
-          create_app_steps_node(k, core, f.station, fn() { "still.fail" })
+          create_app_steps_node(k, core, f.station, fn() { @sf.product() })
           token_fields_node(k, core, nc_tokens(core, f, ""))
         }
         _ => ()
@@ -522,7 +522,7 @@ fn nc_team_node(k : @view.View, core : Core, f : NcFlow, view : () -> Json?, clo
     if getting {
       p.box(fn(s) {
         @sf.style_node(s, fn() { nc_token_start })
-        @sf.words_node(s, fn() { @sf.t("web-pages.connect.tokenWhy", args=[("name", "still.fail")]) }, fn() { desk_muted }) |> ignore
+        @sf.words_node(s, fn() { @sf.t("web-pages.connect.tokenWhy", args=[("name", @sf.product())]) }, fn() { desk_muted }) |> ignore
         config_token_form_node(s, core, f.station, "nc-config/" + f.form, fn() {  }, flow=(
           view,
           fn() { nc_act(core, f, "config") },

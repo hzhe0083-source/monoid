@@ -81,13 +81,9 @@ cd cloud && pnpm install --frozen-lockfile && pnpm run types && pnpm test
 
 **自托管**：云端可以脱离 Cloudflare 跑在 workerd 上，域名、中继和登录方式都用你自己的，见 [cloud/selfhost](cloud/selfhost/README.md) 和[生产环境自托管](docs/development.md#production-self-hosting)。
 
-### 一套代码，两个产品
-
-本仓库同时构建 **monoid**（[monoid.build](https://monoid.build)，测试渠道 monoid.zone）和 **still.fail**（[still.fail](https://still.fail)，测试渠道 youdid.wtf），是同一套代码的两个名字。客户端是哪个产品，由它登录的云端（`client/i18n/brand.ts`）和构建时的 app 版本（`apps/mbui/mbui.json`）决定。内部名称（`stillfail` 命令、`~/.stillfail`、`STILLFAIL_*` 环境变量、`@stillfail/*` 包）两个产品共用，为兼容已安装的 station 保留不改。
-
 ## 隐私和遥测
 
-客户端向它登录的云端发送操作 trace（名称、耗时和错误，不含消息内容）。产品分析（PostHog）只在构建时提供了 key 才会包含，因此从本仓库构建的版本不带；station 的错误报告默认关闭，由 station 的管理者决定是否开启。从本仓库构建的 app 默认连接托管的 still.fail 云端，按 monoid 版本构建的除外。见[隐私政策](https://monoid.build/privacy)。
+客户端向它登录的云端发送操作 trace（名称、耗时和错误，不含消息内容）。产品分析（PostHog）只在构建时提供了 key 才会包含，因此从本仓库构建的版本不带；station 的错误报告默认关闭，由 station 的管理者决定是否开启。各端 app 连接 `app.monoid.build`。见[隐私政策](https://monoid.build/privacy)。
 
 ## 仓库结构
 
@@ -98,7 +94,7 @@ cd cloud && pnpm install --frozen-lockfile && pnpm run types && pnpm test
 | `apps/mbui/` | 各端 app（安卓、iOS、macOS、Windows、Linux 和网页），用 mbui（`libs/mbui`）写 |
 | `libs/` | mbui、组件库和 MoonBit 基础库 |
 | `web/` | 网页上运行 app 的宿主，以及登录、分享和管理后台页面 |
-| `website/` | 官网（monoid.build、still.fail） |
+| `website/` | 官网（[monoid.build](https://monoid.build)）和 [ui.monoid.build](https://ui.monoid.build) |
 | `cloud/` | Cloudflare 上的账号、workspace、中继和发布 |
 | `rules/` | station、cloud 和 core 共用的规则，MoonBit 写、编译成 JavaScript |
 | `scripts/` | 检查、发布和 CI 计划 |

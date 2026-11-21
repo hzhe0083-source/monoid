@@ -644,7 +644,7 @@ fn pl_machine_offers_node(
                   if usable {
                     @sf.t("web-pages.profiles.useMachineTip")
                   } else {
-                    @sf.t("web-pages.profiles.keychainTip", args=[("name", "still.fail")])
+                    @sf.t("web-pages.profiles.keychainTip", args=[("name", @sf.product())])
                   }
                 })
                 |> ignore

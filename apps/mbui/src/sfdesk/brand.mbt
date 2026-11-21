@@ -86,7 +86,7 @@ let update_key_mark : Double = 16.0
 fn update_said() -> (String, String, Bool) {
   match update_now() {
     Allow(_) =>
-      (@sf.t("android-misc.updates.allow"), @sf.t("android-misc.updates.allowWhy", args=[("app", "still.fail")]), false)
+      (@sf.t("android-misc.updates.allow"), @sf.t("android-misc.updates.allowWhy", args=[("app", @sf.product())]), false)
     Checking => {
       let checking = @sf.t("android-misc.updates.checking")
       (checking, checking, true)

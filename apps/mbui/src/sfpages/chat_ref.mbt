@@ -185,7 +185,7 @@ fn ref_menu_body(
   if topic.value is None {
     c.box(style=ref_empty, fn() {
       if topic.error is Some(_) {
-        c.text(@sf.t("web-main.chatRef.update", args=[("app", "still.fail")]), style=ref_empty_words) |> ignore
+        c.text(@sf.t("web-main.chatRef.update", args=[("app", @sf.product())]), style=ref_empty_words) |> ignore
       } else {
         @sf.wait_line(c, @sf.t("common.reading"), key="chat-ref")
       }

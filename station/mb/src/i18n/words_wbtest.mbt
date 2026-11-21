@@ -24,6 +24,19 @@ test "branded: still.fail standing alone only" {
 }
 
 ///|
+test "branded: still.fail's command and home, for a product of a plain name" {
+  assert_eq(branded("启动：stillfail start", "monoid"), "启动：monoid start")
+  assert_eq(branded("~/.stillfail/run/update.log", "monoid"), "~/.monoid/run/update.log")
+  assert_eq(branded("stillfail-station-x.vbs", "monoid"), "monoid-station-x.vbs")
+  assert_eq(
+    branded("stillfail-screen STILLFAIL_DATA @stillfail/ui stillfail.db stillfail/sf", "monoid"),
+    "stillfail-screen STILLFAIL_DATA @stillfail/ui stillfail.db stillfail/sf",
+  )
+  assert_eq(branded("stillfail start", "Acme"), "stillfail start")
+  assert_eq(branded("stillfail start", "still.fail"), "stillfail start")
+}
+
+///|
 test "fill: names given, others left" {
   assert_eq(fill("{a} and {b}", [("a", "1"), ("b", "2")]), "1 and 2")
   assert_eq(fill("{a} and {missing}", [("a", "1")]), "1 and {missing}")

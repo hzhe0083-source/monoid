@@ -305,7 +305,7 @@ fn workspace_block_node(
               let sub = @signals.untracked(here).sub
               confirm(
                 @sf.t("android-settings.workspace.deleteTitle", args=[("name", name)]),
-                @sf.t("android-settings.workspace.deleteText", args=[("n", items(v, "stations").length().to_string()), ("app", "still.fail")]),
+                @sf.t("android-settings.workspace.deleteText", args=[("n", items(v, "stations").length().to_string()), ("app", @sf.product())]),
                 @sf.t("android-settings.workspace.delete"),
                 danger=true,
                 fn() {

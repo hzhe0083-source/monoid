@@ -149,7 +149,7 @@ pub fn stale_build_action(src : Source) -> Unit {
               Offered(v, ..) | Failed(v, _) => update_fetch_found(v, true)
               Ready(v, ..) | Allow(v) =>
                 @ui.update_apply(
-                  @sf.t("android-misc.updates.updated", args=[("app", "still.fail"), ("version", text(Some(v), "versionName"))]),
+                  @sf.t("android-misc.updates.updated", args=[("app", @sf.product()), ("version", text(Some(v), "versionName"))]),
                 )
               _ => update_dialog(src)
             }
@@ -484,7 +484,7 @@ pub fn update_go(src : Source) -> Unit {
       Offered(v, ..) | Failed(v, _) => update_fetch_found(v, true)
       Ready(v, ..) | Allow(v) =>
         @ui.update_apply(
-          @sf.t("android-misc.updates.updated", args=[("app", "still.fail"), ("version", text(Some(v), "versionName"))]),
+          @sf.t("android-misc.updates.updated", args=[("app", @sf.product()), ("version", text(Some(v), "versionName"))]),
         )
       _ => ()
     }
@@ -592,7 +592,7 @@ pub fn update_stands() -> @settings.VersionNow {
 /// How `now` stands, as 关于's version row says it (update_stands).
 fn update_stands_of(now : UpdateNow) -> @settings.VersionNow {
   let version = fn(v : Json) { [("version", text(Some(v), "versionName"))] }
-  let app = ("app", "still.fail")
+  let app = ("app", @sf.product())
   let check = @sf.t("android-settings.version.check")
   let (label, note, going, part) = match now {
     Quiet | Latest | CouldNot(_) => (check, "", false, None)

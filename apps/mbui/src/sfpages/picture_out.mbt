@@ -24,7 +24,7 @@ pub fn picture_out(c : @ui.Ctx, png : Bytes?, copy_said? : Bool = false, copy? :
       true
     }
     Some(png) => {
-      @ui.clipboard_set_png(png, label="still.fail")
+      @ui.clipboard_set_png(png, label=@sf.product())
       if !@ui.copy_shown() && !copy_said {
         say(c, @sf.t("common.copied"))
       }
@@ -48,7 +48,7 @@ pub fn picture_out_now(png : Bytes?, copy_said? : Bool = false, copy? : Bool = f
       true
     }
     Some(png) => {
-      @ui.clipboard_set_png(png, label="still.fail")
+      @ui.clipboard_set_png(png, label=@sf.product())
       if !@ui.copy_shown() && !copy_said {
         @sfbase.toast_later(@sf.t("common.copied"))
       }

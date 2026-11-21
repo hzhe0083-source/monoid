@@ -340,7 +340,7 @@ fn poster_look(c : Pen, fleet : () -> Json?, flat : Bool) -> Pen {
       // (the foot at the picture's foot, however tall what is over it)
       c.box(style=poster_rest, fn(_) {  }) |> ignore
       c.box(style=poster_foot, fn(c) {
-        c.text("still.fail", style=poster_brand) |> ignore
+        c.text(@sf.product(), style=poster_brand) |> ignore
         c.box(style=pic_head, fn(c) {
           c.box(style=pic_grow, fn(c) { c.text_by(fn() { @sf.t("web-main.stations.shareTagline") }, style=poster_small) })
           |> ignore
@@ -572,12 +572,12 @@ fn terminal_look(c : Pen, fleet : () -> Json?, flat : Bool) -> Pen {
       c.box(style=pic_grow, fn(c) { code_words(c, fn() { "still.fail — zsh" }, term_title) }) |> ignore
     })
     |> ignore
-    prompt(c, "still.fail fetch")
+    prompt(c, @sf.product() + " fetch")
     c.box(style=term_who, fn(c) {
       @sf.drawable_node(c.v, "stillfail_mark_dark", term_mark) |> ignore
       c.box(style=term_who_words, fn(c) {
         c.rich(
-          [@ui.span("agents", mono=true, color=@sf.share_orange), @ui.span("@", mono=true), @ui.span("still.fail", mono=true, color=@sf.share_orange)],
+          [@ui.span("agents", mono=true, color=@sf.share_orange), @ui.span("@", mono=true), @ui.span(@sf.product(), mono=true, color=@sf.share_orange)],
           style=term_line_bold,
         )
         |> ignore

@@ -82,7 +82,7 @@ fn debug_logs_copy_node(k : @view.View, d : DebugLogs) -> Unit {
     k,
     fn() { @sf.t(if copied() { "web-pages.screen.stat.copied" } else { "web-pages.screen.debug.logsCopy" }) },
     fn() {
-      @ui.clipboard_set(d.copied_text(), label="still.fail")
+      @ui.clipboard_set(d.copied_text(), label=@sf.product())
       copied_now()
     },
     tone=Quiet,

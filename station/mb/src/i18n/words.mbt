@@ -13,7 +13,62 @@ fn word_char(c : Int) -> Bool {
 ///|
 /// still.fail's name standing alone made `product`'s: not after [\w./@-], not before [\w-] or a `.` and a \w.
 pub fn branded(text : String, product : String) -> String {
-  if product == "still.fail" || !text.contains("still.fail") {
+  if product == "still.fail" {
+    return text
+  }
+  commanded(named(text, product), product)
+}
+
+///|
+/// Whether `text` holds `word` at `i`.
+fn holds(text : String, i : Int, word : String) -> Bool {
+  i >= 0 && i + word.length() <= text.length() && text.unsafe_substring(start=i, end=i + word.length()) == word
+}
+
+///|
+/// still.fail's command and home made `product`'s where it is a plain word (monoid: `monoid start`, ~/.monoid), as
+/// client/i18n/brand.ts COMMAND: `stillfail` standing alone, after `~/.`, or before `-station`; never a part of a
+/// longer name (stillfail-screen, STILLFAIL_DATA, @stillfail/ui, stillfail.db).
+fn commanded(text : String, product : String) -> String {
+  let plain = product.length() > 0 &&
+    product.to_array().iter().all(fn(c) { (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') })
+  if !plain || !text.contains("stillfail") {
+    return text
+  }
+  let word = "stillfail"
+  let out = StringBuilder::new()
+  let mut i = 0
+  while i < text.length() {
+    if holds(text, i, word) {
+      let j = i + word.length()
+      let c0 = if i > 0 { text.unsafe_charcode_at(i - 1) } else { 0 }
+      let c1 = if j < text.length() { text.unsafe_charcode_at(j) } else { 0 }
+      let home = i >= 3 && c0 == '.' && (holds(text, i - 3, "~/") || holds(text, i - 3, "~\\"))
+      let ok = if home {
+        !(word_char(c1) || c1 == '.' || c1 == '-')
+      } else {
+        !(word_char(c0) || c0 == '.' || c0 == '/' || c0 == '@' || c0 == '\\' || c0 == '~' || c0 == '-') &&
+        (
+          !(word_char(c1) || c1 == '.' || c1 == '/' || c1 == '@' || c1 == '\\' || c1 == '-') ||
+          holds(text, j, "-station")
+        )
+      }
+      if ok {
+        out.write_string(product)
+        i = j
+        continue
+      }
+    }
+    out.write_char(text.unsafe_charcode_at(i).unsafe_to_char())
+    i += 1
+  }
+  out.to_string()
+}
+
+///|
+/// still.fail's name standing alone made `product`'s.
+fn named(text : String, product : String) -> String {
+  if !text.contains("still.fail") {
     return text
   }
   let name = "still.fail"

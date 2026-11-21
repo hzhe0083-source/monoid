@@ -360,7 +360,7 @@ fn config_token_form_node(
       |> ignore
     })
     sa_guide_step_node(g, 2, "web-pages.slackApp.step2", fn() { @sf.t("web-pages.slackApp.step2Note") }, fn(_) {  })
-    sa_guide_step_node(g, 3, "web-pages.slackApp.step3", fn() { @sf.t("web-pages.slackApp.step3Note", args=[("name", "still.fail")]) }, fn(
+    sa_guide_step_node(g, 3, "web-pages.slackApp.step3", fn() { @sf.t("web-pages.slackApp.step3Note", args=[("name", @sf.product())]) }, fn(
       b,
     ) {
       b.box(fn(r) {

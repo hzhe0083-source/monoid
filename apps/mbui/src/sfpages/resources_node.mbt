@@ -840,7 +840,7 @@ fn rs_foot_node(r : @view.View, v : () -> Json?, basis : Bool) -> Unit {
 /// its figures where the line has the room for all of them, else over them; the network's figure where the station
 /// reads it. Pressed, `processes` (its page's choice's press of 进程).
 fn station_uses_node(p : @view.View, uv : () -> Json?, processes : () -> Unit) -> Unit {
-  let name = fn() { @sf.t("web-pages.stations.uses", args=[("name", "still.fail")]) }
+  let name = fn() { @sf.t("web-pages.stations.uses", args=[("name", @sf.product())]) }
   p.box(fn(b) {
     @sf.style_node(b, fn() { rs_uses })
     @sf.presses_node(b, processes)

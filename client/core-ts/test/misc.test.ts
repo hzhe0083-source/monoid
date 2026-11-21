@@ -164,6 +164,11 @@ test("another_products_words_keep_still_fails_hosts", () => {
   assert.equal(branded("still.fail cloud 在 app.still.fail，装 still.fail.app 或 https://still.fail/en；用 still.fail。", monoid), "monoid cloud 在 app.still.fail，装 still.fail.app 或 https://still.fail/en；用 monoid。");
   assert.equal(productOf("https://admin.monoid.zone").name, "monoid");
   assert.equal(branded("still.fail", productOf("https://app.still.fail")), "still.fail");
+  // its command and home too, never a longer name every product's release shares
+  assert.equal(branded("启动：stillfail start；`stillfail lock reset`；~/.stillfail/run；stillfail-station-x.vbs；a stillfail folder", monoid), "启动：monoid start；`monoid lock reset`；~/.monoid/run；monoid-station-x.vbs；a monoid folder");
+  const kept = "stillfail-screen STILLFAIL_DATA @stillfail/ui stillfail.db stillfail/sf";
+  assert.equal(branded(kept, monoid), kept);
+  assert.equal(branded("stillfail start", productOf("https://app.still.fail")), "stillfail start");
 });
 
 test("a_core_takes_its_name_from_its_hosts_cloud", async () => {

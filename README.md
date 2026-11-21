@@ -81,13 +81,9 @@ cd cloud && pnpm install --frozen-lockfile && pnpm run types && pnpm test
 
 **Self-hosting**: the cloud runs on workerd outside Cloudflare, with its names, relay and sign-in your own; see [cloud/selfhost](cloud/selfhost/README.md) and [Production self-hosting](docs/development.md#production-self-hosting).
 
-### One codebase, two products
-
-This repository builds **monoid** ([monoid.build](https://monoid.build); test channel monoid.zone) and **still.fail** ([still.fail](https://still.fail); test channel youdid.wtf), the same code under two names. The product is chosen by the cloud a client signs in to (`client/i18n/brand.ts`) and by the app flavor it is built as (`apps/mbui/mbui.json`). Internal names (the `stillfail` command, `~/.stillfail`, `STILLFAIL_*` variables and the `@stillfail/*` packages) are shared by both and kept for compatibility with installed stations.
-
 ## Privacy and telemetry
 
-Clients send operation traces (names, timings and errors, without message content) to the cloud they are signed in to. Product analytics (PostHog) are only included when a key is supplied at build time, so builds from this repository have none; station error reports are off unless the station's operator enables them. App builds from this repository connect to the hosted still.fail cloud unless built as a monoid flavor. See the [privacy policy](https://monoid.build/en/privacy).
+Clients send operation traces (names, timings and errors, without message content) to the cloud they are signed in to. Product analytics (PostHog) are only included when a key is supplied at build time, so builds from this repository have none; station error reports are off unless the station's operator enables them. The apps connect to `app.monoid.build`. See the [privacy policy](https://monoid.build/en/privacy).
 
 ## Repository
 
@@ -98,7 +94,7 @@ Clients send operation traces (names, timings and errors, without message conten
 | `apps/mbui/` | The apps (Android, iOS, macOS, Windows, Linux and the web), written in mbui (`libs/mbui`) |
 | `libs/` | mbui, the component libraries and the MoonBit base |
 | `web/` | The web's host of the app, and its sign-in, share and admin pages |
-| `website/` | The official sites (monoid.build, still.fail) |
+| `website/` | The official site ([monoid.build](https://monoid.build)) and [ui.monoid.build](https://ui.monoid.build) |
 | `cloud/` | Accounts, workspaces, relays and releases on Cloudflare |
 | `rules/` | Rules shared by the station, the cloud and the core, in MoonBit built to JavaScript |
 | `scripts/` | Checks, releases and the CI plan |

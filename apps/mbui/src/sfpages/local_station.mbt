@@ -47,7 +47,7 @@ pub fn local_station_node(
     said?,
     width?,
     about=fn() {
-      @sf.t(if pc { "web-pages.localStation.leadPc" } else { "web-pages.localStation.lead" }, args=[("name", "still.fail")])
+      @sf.t(if pc { "web-pages.localStation.leadPc" } else { "web-pages.localStation.lead" }, args=[("name", @sf.product())])
     },
     fn() { if text(s(), "data") == "" { ["none"] } else { ["card"] } },
     fn(b, key) {
@@ -318,7 +318,7 @@ fn local_facts(s : Json?, pc : Bool) -> Array[String] {
   let run_by = match text(s, "runner") {
     "service" => service_name(s)
     "other" => @sf.t("web-pages.localStation.byHand")
-    "app" => @sf.t("web-pages.localStation.byApp", args=[("name", "still.fail")])
+    "app" => @sf.t("web-pages.localStation.byApp", args=[("name", @sf.product())])
     // stopped: its service's; with none, nothing runs it (this app runs none of its own)
     _ => if service { service_name(s) } else { "" }
   }

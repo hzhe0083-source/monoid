@@ -3,6 +3,7 @@
 // it is given there; what is unavailable now for want of one; the desktop's page when its screen can be seen and
 // driven (a person asks for a grant and grants it from wherever they are, through it); and whether the viewer may ask.
 // A station that says none (not a Mac, or from before them) has none: the page shows nothing.
+import * as brand from "./brand.ts";
 import { t } from "./i18n.ts";
 import { encode } from "./ops.ts";
 import { StationAddr } from "./station/addr.ts";
@@ -38,7 +39,7 @@ export function permissionsShown(v: unknown, station: string): J | undefined {
     const up = !granted && asking.has(id);
     // The LAN not reached: where it is switched on, for the app the station runs in (no window asks for it).
     const off = id === "localNetwork" && !granted;
-    const app = typeof v.localNetworkName === "string" ? v.localNetworkName : "still.fail";
+    const app = typeof v.localNetworkName === "string" ? v.localNetworkName : brand.current().name;
     const line = off
       ? t("core-views.permissions.localNetwork.off", { app })
       : up

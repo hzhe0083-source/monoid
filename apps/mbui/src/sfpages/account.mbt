@@ -171,7 +171,7 @@ pub fn me_node(
         @sf.section_node(
           b,
           fn() { @sf.t("web-pages.settings.account.sessions") },
-          note=fn() { @sf.t("web-pages.settings.account.sessionsLead", args=[("name", "still.fail")]) },
+          note=fn() { @sf.t("web-pages.settings.account.sessionsLead", args=[("name", @sf.product())]) },
           fn(sec) { acc_devices_node(sec, core, here) },
         )
       // deleting the account in view, at the foot, in red

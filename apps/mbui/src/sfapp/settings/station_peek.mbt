@@ -129,7 +129,7 @@ fn peek_down(s : Json?) -> String {
   }
   match field(s, "problems") {
     Some(Array([first, ..])) if text(Some(first), "key") == "updating" => text(Some(first), "text")
-    _ => fill("android-settings.stations.offline", [("app", "still.fail")])
+    _ => fill("android-settings.stations.offline", [("app", @sf.product())])
   }
 }
 

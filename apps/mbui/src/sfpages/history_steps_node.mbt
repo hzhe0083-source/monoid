@@ -792,7 +792,7 @@ fn item_node(
         let more = next()
         let first = first_line(note)
         let single = note == first && !note.contains("\n")
-        let rem_label = @sf.t("web-main.history.reminder", args=[("name", "still.fail")])
+        let rem_label = @sf.t("web-main.history.reminder", args=[("name", @sf.product())])
         one_line_ev_node(
           v,
           "bell",

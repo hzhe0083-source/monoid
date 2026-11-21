@@ -64,6 +64,17 @@ export function rebrand(html, site) {
     .replace(/(?<![\w./-])monoid(?![\w-]|\.\w)/g, name);
 }
 
+/** A legal page of still.fail's (web/public) as `site`'s product has it: on monoid's sites its name where still.fail's
+ *  stands alone, then its hosts and addresses where still.fail's are (still.fail: monoid.build, youdid.wtf:
+ *  monoid.zone), as cloud/deploy.py `rebrand_static` makes the web app's copies of them on app.monoid.build. */
+export function legal(html, site) {
+  if (SITES[site].style !== "monoid") return html;
+  return html
+    .replace(/(?<![\w./@-])still\.fail(?![\w-]|\.\w)/g, "monoid")
+    .replace(/(?<![\w.-])((?:[\w-]+\.)*)still\.fail(?![\w-]|\.\w)/g, "$1monoid.build")
+    .replace(/(?<![\w.-])((?:[\w-]+\.)*)youdid\.wtf(?![\w-]|\.\w)/g, "$1monoid.zone");
+}
+
 // ---------- Keys ----------
 
 /** Text as it is stored and handed to translators: whitespace runs as one space (a space at either end matters: it
@@ -618,10 +629,11 @@ function main(argv) {
     }
   }
   // Terms, privacy and trademark, the pages the footer links (still.fail's web/public: in Chinese at /terms…, in
-  // English at /en/terms…), with the sheet and icon they ask for at the root.
+  // English at /en/terms…), with the sheet and icon they ask for at the root: as this site's product has them.
+  mkdirSync(out + "en", { recursive: true });
   for (const f of ["terms", "privacy", "trademark"]) {
-    cpSync(here(`../web/public/${f}.html`), out + `${f}.html`);
-    cpSync(here(`../web/public/en/${f}.html`), out + `en/${f}.html`);
+    writeFileSync(out + `${f}.html`, legal(readFileSync(here(`../web/public/${f}.html`), "utf8"), site));
+    writeFileSync(out + `en/${f}.html`, legal(readFileSync(here(`../web/public/en/${f}.html`), "utf8"), site));
   }
   cpSync(here("../web/public/legal.css"), out + "legal.css");
   cpSync(out + "assets/favicon.svg", out + "favicon.svg");

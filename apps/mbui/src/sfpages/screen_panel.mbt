@@ -403,7 +403,7 @@ fn net_node(v : @view.View, s : ScreenSess, u : ScreenUi) -> Unit {
         fn() { @sf.t(if copied.get() { "web-pages.screen.stat.copied" } else { "web-pages.screen.stat.copy" }) },
         fn() {
           let n = @signals.untracked(net)
-          @ui.clipboard_set(diagnosis(s, u, n, screen_os(s.src, s.station)).stringify(), label="still.fail")
+          @ui.clipboard_set(diagnosis(s, u, n, screen_os(s.src, s.station)).stringify(), label=@sf.product())
           copied.set(true)
           (due.val)()
           due.val = at.at_moment(at.cause_at() + diag_said_ms, fn() { copied.set(false) })

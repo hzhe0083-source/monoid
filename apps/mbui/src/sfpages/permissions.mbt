@@ -32,7 +32,7 @@ pub fn permissions_node(
     frame~,
     said?,
     width?,
-    lead=fn() { @sf.t("web-pages.permissions.lead", args=[("name", "still.fail")]) },
+    lead=fn() { @sf.t("web-pages.permissions.lead", args=[("name", @sf.product())]) },
     fn() { ["notify"] },
     fn(b, _key) {
       permission_row_node(
@@ -60,7 +60,7 @@ fn notice_where() -> String {
       4 => "web-pages.permissions.where.browser"
       _ => "web-pages.permissions.where.windows"
     },
-    args=[("name", "still.fail")],
+    args=[("name", @sf.product())],
   )
 }
 

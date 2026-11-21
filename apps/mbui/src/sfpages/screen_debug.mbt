@@ -581,7 +581,7 @@ fn debug_shot(s : ScreenSess, d : DebugLogs) -> Unit {
       Ok(v) =>
         match @codec.from_base64_exact(text(Some(v), "png")) {
           Some(png) => {
-            @ui.clipboard_set_png(png, label="still.fail")
+            @ui.clipboard_set_png(png, label=@sf.product())
             d.shot_said = true
             d.told.set(d.told.untracked() + 1)
           }

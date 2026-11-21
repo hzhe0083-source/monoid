@@ -915,7 +915,7 @@ fn publish_brand_node(parent : @view.View, column : () -> Double, taking : Bool)
     .margin(By(fn() { (publish_words_in(column(), taking), 0.0, 0.0, 0.0) }))
     |> ignore
     @sf.drawable_node(b, "stillfail_mark", publish_mark) |> ignore
-    @sf.words_node(b, fn() { "still.fail" }, fn() { publish_brand }) |> ignore
+    @sf.words_node(b, fn() { @sf.product() }, fn() { publish_brand }) |> ignore
   })
   |> ignore
 }

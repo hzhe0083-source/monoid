@@ -35,7 +35,14 @@ export function productOf(origin: string): Product {
 /** The name still.fail standing alone (not a host or an address: app.still.fail, https://still.fail, noreply@still.fail, still.fail.app). */
 const NAME = /(?<![\w./@-])still\.fail(?![\w-]|\.\w)/g;
 
-/** `text` with still.fail's name `product`'s. */
+/** still.fail's command and home as people are told them (`stillfail start`, ~/.stillfail/run, stillfail-station.service):
+ * the word standing alone, or after `~/.`, or before `-station`. Not a part of a longer name (stillfail-screen,
+ * STILLFAIL_DATA, @stillfail/ui, stillfail.db): those are every product's. */
+const COMMAND = /(?<=~[/\\]\.)stillfail(?![\w.-])|(?<![\w./@\\~-])stillfail(?![\w./@\\]|-(?!station))/g;
+
+/** `text` with still.fail's name `product`'s, and its command and home `product`'s (its id's: `monoid start`, ~/.monoid). */
 export function branded(text: string, product: Product): string {
-  return product === STILLFAIL || !text.includes("still.fail") ? text : text.replace(NAME, product.name);
+  if (product === STILLFAIL) return text;
+  const named = text.includes("still.fail") ? text.replace(NAME, product.name) : text;
+  return named.includes("stillfail") ? named.replace(COMMAND, product.id) : named;
 }
