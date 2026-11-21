@@ -1,10 +1,10 @@
-# Working on still.fail (for agents)
+# Working on monoid (for agents)
 
 These rules apply to the whole repository. Each part has its own `AGENTS.md` beside its code, loaded when tools touch that directory.
 
 ## The parts
 
-still.fail runs coding-agent sessions in team chats (Slack, Feishu, Comma, and still.fail chats) on user-owned **stations** driven by Claude Code, Codex, and other runtimes.
+monoid (also built as still.fail, the same code under its other name: `client/i18n/brand.ts`) runs coding-agent sessions in team chats (Slack, Feishu, Comma, and its own chats) on user-owned **stations** driven by Claude Code, Codex, and other runtimes.
 
 - `station/`: TypeScript station on bundled Node + Effect (`scripts/station-bundle.sh`), prebuilt native parts (`station/native`), and MoonBit program (`station/mb`) for readers, builders, and the whole station (not shipped alone until it matches TypeScript). Holds chats, sessions, agents, jobs, and accounts over the mesh.
 - `cloud/`: Cloudflare Workers for accounts, workspaces, member credentials, and relays. People only.

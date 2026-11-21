@@ -1,4 +1,4 @@
-# Contributing to still.fail
+# Contributing to monoid
 
 Bug reports and focused pull requests are welcome. Describe the expected behavior, what happened, your platform and app version, and steps to reproduce. Remove credentials, conversation content and personal data from logs and screenshots. Report vulnerabilities privately as described in [SECURITY.md](SECURITY.md).
 
