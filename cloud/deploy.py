@@ -149,6 +149,9 @@ CLOUDS = {
         "zones": {"still.fail": "monoid.build", "youdid.wtf": "monoid.zone"},
         # its name where still.fail's stands alone in the static sites' pages (client/i18n/brand.ts says it for the rest)
         "name": "monoid",
+        # who runs it, where still.fail's legal pages say their operator (web/public's data-operator; website/build.mjs
+        # MONOID_OPERATOR, the same words)
+        "operator": {"zh": "在美国特拉华州注册成立的公司 AFK AI, Inc.", "en": "AFK AI, Inc., a Delaware corporation"},
         "dropped": ["3720.org"],
         # The API's own: Cloudflare Access in front of the console (src/admin.ts), its application "monoid admin" on
         # admin.monoid.build letting in the AFK-surf GitHub organization's members.
@@ -190,6 +193,14 @@ def rebrand_static(cloud: str = CLOUD) -> None:
         for path in (REPO / "dist" / site).rglob("*"):
             if path.suffix in (".html", ".webmanifest") and path.is_file():
                 text = path.read_text()
+                # (who runs it, on the legal pages: their language's)
+                operator = CLOUDS[cloud].get("operator")
+                if operator:
+                    said = operator["en" if '<html lang="en"' in text else "zh"]
+                    text = re.sub(r"<span data-operator>[^<]*</span>", lambda _: f"<span data-operator>{said}</span>", text)
+                    # (where its terms differ from still.fail's: still.fail's element left out, its own in its place)
+                    text = re.sub(r'<(p|li|h2)\b[^>]*\sdata-product="still\.fail"[^>]*>.*?</\1>', "", text, flags=re.S)
+                    text = re.sub(r'<template data-product="monoid">(.*?)</template>', r"\1", text, flags=re.S)
                 # (the name first: rehost would take a bare still.fail for the domain it also is)
                 path.write_text(rehost(STILLFAIL_NAME.sub(CLOUDS[cloud]["name"], text), cloud))
 

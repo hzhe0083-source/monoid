@@ -64,12 +64,21 @@ export function rebrand(html, site) {
     .replace(/(?<![\w./-])monoid(?![\w-]|\.\w)/g, name);
 }
 
-/** A legal page of still.fail's (web/public) as `site`'s product has it: on monoid's sites its name where still.fail's
- *  stands alone, then its hosts and addresses where still.fail's are (still.fail: monoid.build, youdid.wtf:
+/** Who runs monoid, as its legal pages say it where still.fail's say its operator (web/public's `data-operator`):
+ *  cloud/deploy.py CLOUDS' `operator`, the same words. */
+export const MONOID_OPERATOR = { zh: "在美国特拉华州注册成立的公司 AFK AI, Inc.", en: "AFK AI, Inc., a Delaware corporation" };
+
+/** A legal page of still.fail's (web/public) as `site`'s product has it: who runs it (`data-operator`), on monoid's sites its name where still.fail's
+ *  stands alone and its own terms where they differ (`data-product`), then its hosts and addresses where still.fail's are (still.fail: monoid.build, youdid.wtf:
  *  monoid.zone), as cloud/deploy.py `rebrand_static` makes the web app's copies of them on app.monoid.build. */
 export function legal(html, site) {
   if (SITES[site].style !== "monoid") return html;
+  const en = /<html lang="en"/.test(html);
   return html
+    .replace(/<span data-operator>[^<]*<\/span>/g, `<span data-operator>${MONOID_OPERATOR[en ? "en" : "zh"]}</span>`)
+    // (where its terms differ from still.fail's: still.fail's element left out, monoid's put in its place)
+    .replace(/<(p|li|h2)\b[^>]*\sdata-product="still\.fail"[^>]*>[\s\S]*?<\/\1>/g, "")
+    .replace(/<template data-product="monoid">([\s\S]*?)<\/template>/g, "$1")
     .replace(/(?<![\w./@-])still\.fail(?![\w-]|\.\w)/g, "monoid")
     .replace(/(?<![\w.-])((?:[\w-]+\.)*)still\.fail(?![\w-]|\.\w)/g, "$1monoid.build")
     .replace(/(?<![\w.-])((?:[\w-]+\.)*)youdid\.wtf(?![\w-]|\.\w)/g, "$1monoid.zone");
